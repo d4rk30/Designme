@@ -79,22 +79,23 @@ const AttackLogs: React.FC = () => {
   ];
 
   // 模拟数据
-  const data = [
-    {
-      key: '1',
-      time: '2024-12-15 21:00:00',
-      attackIp: '192.168.1.1',
-      location: '中国',
-      targetIp: '192.168.1.2',
-      targetPort: '80',
-      intelType: '僵尸网络',
-      threatLevel: '高危',
-      action: '阻断',
-      intelSource: '公有情报源',
-      lastAttackUnit: '1小时前',
-    },
-    // 添加更多模拟数据...
-  ];
+  const generateMockData = () => {
+    return Array.from({ length: 100 }, (_, index) => ({
+      key: String(index + 1),
+      time: `2024-12-15 ${String(Math.floor(Math.random() * 24)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
+      attackIp: `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`,
+      location: ['中国', '美国', '俄罗斯', '德国', '日本', '韩国', '新加坡'][Math.floor(Math.random() * 7)],
+      targetIp: `192.168.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`,
+      targetPort: String(Math.floor(Math.random() * 65535)),
+      intelType: ['僵尸网络', '恶意软件', 'DDoS攻击', '漏洞利用', '暴力破解', '钓鱼攻击'][Math.floor(Math.random() * 6)],
+      threatLevel: ['高危', '中危', '低危'][Math.floor(Math.random() * 3)],
+      action: ['阻断', '告警', '记录'][Math.floor(Math.random() * 3)],
+      intelSource: ['公有情报源', '私有情报源', '第三方情报源', '自建情报源'][Math.floor(Math.random() * 4)],
+      lastAttackUnit: [`${Math.floor(Math.random() * 24)}小时前`, `${Math.floor(Math.random() * 60)}分钟前`][Math.floor(Math.random() * 2)],
+    }));
+  };
+
+  const data = generateMockData();
 
   return (
     <>
@@ -124,6 +125,13 @@ const AttackLogs: React.FC = () => {
           rowSelection={{
             selectedRowKeys: selectedRows.map(row => row.key),
             onChange: (_, rows) => setSelectedRows(rows),
+          }}
+          pagination={{
+            total: data.length,
+            pageSize: 10,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total) => `共 ${total} 条记录`,
           }}
         />
       </Card>

@@ -5,8 +5,8 @@ export const IntelTypeChart: React.FC = () => {
   // 生成示例数据
   const generateData = () => {
     const types = [
-      'IP信誉库', 'Botnet僵尸网络', 'Web攻击', 'APT组织', 'Webshell',
-      'RAT木马', '勒索软件', '挖矿木马', '后门程序', '蠕虫病毒'
+      '僵尸网络', '漏洞利用', '恶意IP', '暴力破解', '扫描探测',
+      '拒绝服务攻击', 'WebShell攻击', '恶意代码攻击', '代理IP', '木马蠕虫攻击'
     ];
     
     return types.map(type => ({
