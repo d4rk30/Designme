@@ -3,6 +3,12 @@ import { Card, Table, Button, Space, Input, Form, Select, Row, Col, Cascader, Mo
 import { AttackTrendChart } from '../components/AttackTrendChart';
 import { IntelTypeChart } from '../components/IntelTypeChart';
 import AttackLogDetail from '../components/AttackLogDetail';
+import dayjs, { Dayjs } from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 interface FilterValues {
   intelType?: string;
@@ -11,6 +17,7 @@ interface FilterValues {
   attackIp?: string;
   targetIp?: string;
   location?: string[];
+  dateRange?: [Dayjs, Dayjs] | null;
 }
 
 interface SavedFilter {
@@ -20,7 +27,7 @@ interface SavedFilter {
   createTime: string;
 }
 
-const AttackLogs: React.FC = () => {
+const ExternalConnectionLogs: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const [filterValues, setFilterValues] = useState<FilterValues>({});
   const [form] = Form.useForm();
@@ -29,6 +36,8 @@ const AttackLogs: React.FC = () => {
   const [filterName, setFilterName] = useState('');
   const [isDetailVisible, setIsDetailVisible] = useState(false);
   const [selectedLog, setSelectedLog] = useState<any>(null);
+  const [] = useState(false);
+  const [] = useState<[Dayjs, Dayjs] | null>(null);
 
   // 归属地数据
   const locationOptions = [
@@ -261,7 +270,11 @@ const AttackLogs: React.FC = () => {
           return item.location === specific;  // 国外国家精确匹配
         }
         return false;
-      })())
+      })()) &&
+      (!filterValues.dateRange || (
+        dayjs(item.time).isSameOrAfter(filterValues.dateRange[0]) &&
+        dayjs(item.time).isSameOrBefore(filterValues.dateRange[1])
+      ))
     );
   });
 
@@ -329,7 +342,7 @@ const AttackLogs: React.FC = () => {
   return (
     <>
       <Card style={{ marginBottom: '24px', backgroundColor: 'white' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ width: '48%' }}>
             <AttackTrendChart />
           </div>
@@ -552,4 +565,4 @@ const AttackLogs: React.FC = () => {
   );
 };
 
-export default AttackLogs;
+export default ExternalConnectionLogs;

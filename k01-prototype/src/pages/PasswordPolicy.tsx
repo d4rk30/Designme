@@ -1,23 +1,43 @@
-import { Card, Tabs } from 'antd';
+import { Card } from 'antd';
 import { useState } from 'react';
 import PolicyList from '../components/password-policy/PolicyList';
 import CustomPasswordList from '../components/password-policy/CustomPasswordList';
+import './PasswordPolicy.css';
 
-const { TabPane } = Tabs;
+const tabList = [
+  {
+    key: 'policy',
+    tab: '策略列表',
+  },
+  {
+    key: 'custom',
+    tab: '自定义口令列表',
+  },
+];
+
+const contentList = {
+  policy: <PolicyList />,
+  custom: <CustomPasswordList />,
+};
 
 const PasswordPolicy = () => {
-  const [activeTab, setActiveTab] = useState('1');
+  const [activeTabKey, setActiveTabKey] = useState<string>('policy');
+
+  const onTabChange = (key: string) => {
+    setActiveTabKey(key);
+  };
 
   return (
-    <Card>
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        <TabPane tab="策略列表" key="1">
-          <PolicyList />
-        </TabPane>
-        <TabPane tab="自定义口令列表" key="2">
-          <CustomPasswordList />
-        </TabPane>
-      </Tabs>
+    <Card
+      className="password-policy-card"
+      tabList={tabList}
+      activeTabKey={activeTabKey}
+      onTabChange={onTabChange}
+      tabProps={{
+        size: 'large',
+      }}
+    >
+      {contentList[activeTabKey as keyof typeof contentList]}
     </Card>
   );
 };

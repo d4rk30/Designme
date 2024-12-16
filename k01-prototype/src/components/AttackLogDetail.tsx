@@ -176,7 +176,7 @@ const AttackLogDetail: React.FC<AttackLogDetailProps> = ({
             title="告警信息详情"
             extra={
               <Space size={16} align="center">
-                <Typography.Text type="secondary" style={{ fontSize: '12px' }}>
+                <Typography.Text type="secondary" style={{ fontSize: '14px' }}>
                   攻击者IP
                 </Typography.Text>
                 <Button 
@@ -303,7 +303,7 @@ const AttackLogDetail: React.FC<AttackLogDetailProps> = ({
       <Drawer
         title={
           <div style={{ display: 'flex', alignItems: 'center', height: '32px' }}>
-            <Title level={4} style={{ margin: 0 }}>攻击日志详情</Title>
+            <Title level={4} style={{ margin: 0, fontSize: '18px' }}>攻击日志详情</Title>
           </div>
         }
         placement="right"

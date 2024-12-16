@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import MainLayout from './layouts/MainLayout';
 import AttackLogs from './pages/AttackLogs';
 import PasswordPolicy from './pages/PasswordPolicy';
+import Dashboard from './pages/Dashboard';
+import ExternalConnectionLogs from './pages/ExternalConnectionLogs';
 import './App.css';
 
 function App() {
@@ -11,11 +13,11 @@ function App() {
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Navigate to="/home" replace />} />
           <Route path="home" element={<div>首页</div>} />
-          <Route path="dashboard" element={<div>仪表盘</div>} />
+          <Route path="dashboard" element={<Dashboard />} />
           <Route path="attack-logs" element={<AttackLogs />} />
           <Route path="attack-ip-analysis" element={<div>攻击IP分析</div>} />
           <Route path="attacked-ip-analysis" element={<div>被攻击IP分析</div>} />
-          <Route path="external-logs" element={<div>外联检测日志</div>} />
+          <Route path="external-logs" element={<ExternalConnectionLogs />} />
           <Route path="controlled-host-analysis" element={<div>受控主机分析</div>} />
           <Route path="external-target-analysis" element={<div>外联目标分析</div>} />
           <Route path="weak-password" element={<div>弱口令登录告警</div>} />

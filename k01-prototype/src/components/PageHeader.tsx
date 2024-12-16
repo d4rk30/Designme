@@ -7,11 +7,11 @@ import dayjs from 'dayjs';
 const { RangePicker } = DatePicker;
 
 // 获取本周的开始和结束时间
-const getCurrentWeek = () => {
+const getCurrentWeek = (): [dayjs.Dayjs, dayjs.Dayjs] => {
   const now = dayjs();
   const startOfWeek = now.startOf('week');
   const endOfWeek = now.endOf('week');
-  return [startOfWeek, endOfWeek];
+  return [startOfWeek, endOfWeek] as [dayjs.Dayjs, dayjs.Dayjs];
 };
 
 // 菜单路径映射，记录每个页面的完整路径层级
@@ -74,7 +74,7 @@ interface PageHeaderProps {
 const PageHeader: React.FC<PageHeaderProps> = ({ extra }) => {
   const location = useLocation();
   const [autoRefresh, setAutoRefresh] = useState(false);
-  const [dateRange, setDateRange] = useState(getCurrentWeek());
+  const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>(getCurrentWeek());
 
   const breadcrumbItems = useMemo(() => {
     const pathname = location.pathname.endsWith('/') 
@@ -103,9 +103,9 @@ const PageHeader: React.FC<PageHeaderProps> = ({ extra }) => {
     setDateRange(dates);
   };
 
-  const isAttackLogsPage = location.pathname === '/attack-logs';
+  const ifNeedAutoRefresh = location.pathname === '/attack-logs' || location.pathname === '/external-logs';
 
-  const extraContent = isAttackLogsPage ? (
+  const extraContent = ifNeedAutoRefresh ? (
     <Space size={24}>
       <Space>
         <span>自动刷新</span>
