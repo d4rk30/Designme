@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import AttackLogs from './pages/AttackLogs';
+import PasswordPolicy from './pages/PasswordPolicy';
 import './App.css';
 
 function App() {
@@ -28,7 +29,7 @@ function App() {
           <Route path="application-hiding" element={<div>应用隐身</div>} />
           <Route path="attack-policy" element={<div>攻击监测策略</div>} />
           <Route path="external-policy" element={<div>外联检测策略</div>} />
-          <Route path="password-policy" element={<div>弱口令登录策略</div>} />
+          <Route path="password-policy" element={<PasswordPolicy />} />
           <Route path="ip-control" element={<div>IP访问控制</div>} />
           <Route path="blacklist" element={<div>黑白名单</div>} />
           <Route path="mapping-policy" element={<div>反测绘策略</div>} />
