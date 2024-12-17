@@ -75,6 +75,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ extra }) => {
   const location = useLocation();
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>(getCurrentWeek());
+  const [lastUpdateTime, setLastUpdateTime] = useState(dayjs().format('YYYY-MM-DD HH:mm:ss'));
 
   const breadcrumbItems = useMemo(() => {
     const pathname = location.pathname.endsWith('/') 
@@ -104,6 +105,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ extra }) => {
   };
 
   const ifNeedAutoRefresh = location.pathname === '/attack-logs' || location.pathname === '/external-logs';
+  const isPublicIntelligence = location.pathname === '/public-intelligence';
 
   const extraContent = ifNeedAutoRefresh ? (
     <Space size={24}>
@@ -122,6 +124,11 @@ const PageHeader: React.FC<PageHeaderProps> = ({ extra }) => {
         onChange={handleDateRangeChange}
         defaultValue={[dayjs().startOf('week'), dayjs()]}
       />
+    </Space>
+  ) : isPublicIntelligence ? (
+    <Space>
+      <span>更新时间：</span>
+      <span>{lastUpdateTime}</span>
     </Space>
   ) : extra;
 

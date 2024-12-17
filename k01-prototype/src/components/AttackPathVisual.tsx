@@ -2,7 +2,6 @@ import React from 'react';
 import { Space, Typography, Button, Tag, Descriptions } from 'antd';
 import { StopOutlined } from '@ant-design/icons';
 
-const { Text } = Typography;
 
 // 导入图片
 import attackerIcon from '../assets/icons/attacker.svg';

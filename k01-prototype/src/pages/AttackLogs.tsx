@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Space, Input, Form, Select, Row, Col, Cascader, Modal, message } from 'antd';
+import { Card, Table, Button, Space, Input, Form, Select, Row, Col, Cascader, Modal, message, Drawer, List, Typography, Tag } from 'antd';
+import { StarOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
 import { AttackTrendChart } from '../components/AttackTrendChart';
 import { IntelTypeChart } from '../components/IntelTypeChart';
 import AttackLogDetail from '../components/AttackLogDetail';
+import IpFavorites from '../components/IpFavorites';
+import CollapsedCharts from '../components/CollapsedCharts';
 
 interface FilterValues {
   intelType?: string;
@@ -29,6 +32,47 @@ const AttackLogs: React.FC = () => {
   const [filterName, setFilterName] = useState('');
   const [isDetailVisible, setIsDetailVisible] = useState(false);
   const [selectedLog, setSelectedLog] = useState<any>(null);
+  const [isIpDrawerVisible, setIsIpDrawerVisible] = useState(false);
+  const [isChartsExpanded, setIsChartsExpanded] = useState(false);
+
+  // IP收藏夹相关
+  const showIpDrawer = () => {
+    setIsIpDrawerVisible(true);
+  };
+
+  const closeIpDrawer = () => {
+    setIsIpDrawerVisible(false);
+  };
+
+  // 添加到收藏夹
+  const addToFavorites = (ip: string, type: 'attack' | 'target') => {
+    const savedIps = localStorage.getItem('favoriteIps');
+    const favoriteIps = savedIps ? JSON.parse(savedIps) : [];
+
+    // 检查IP是否已存在
+    if (favoriteIps.some((item: any) => item.ip === ip)) {
+      message.warning('该IP已在收藏夹中');
+      return;
+    }
+
+    const newFavoriteIp = {
+      ip,
+      type,
+      key: ip,
+    };
+
+    const newFavoriteIps = [...favoriteIps, newFavoriteIp];
+    localStorage.setItem('favoriteIps', JSON.stringify(newFavoriteIps));
+    message.success('IP已添加到收藏夹');
+  };
+
+  // 从localStorage加载收藏的IP
+  useEffect(() => {
+    const savedIps = localStorage.getItem('favoriteIps');
+    if (savedIps) {
+      // setFavoriteIps(JSON.parse(savedIps));
+    }
+  }, []);
 
   // 归属地数据
   const locationOptions = [
@@ -90,78 +134,108 @@ const AttackLogs: React.FC = () => {
     {
       title: '时间',
       dataIndex: 'time',
-      key: 'time',
+      width: 180,
+      ellipsis: true
     },
     {
       title: '攻击IP',
       dataIndex: 'attackIp',
-      key: 'attackIp',
+      width: 220,
+      render: (ip: string) => (
+        <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+          <Button
+            type="link"
+            style={{ padding: 0, minWidth: 32, marginRight: 8 }}
+            icon={<StarOutlined />}
+            onClick={(e) => {
+              e.stopPropagation();
+              addToFavorites(ip, 'attack');
+            }}
+          />
+          <Typography.Text copyable style={{ width: 160 }} ellipsis>{ip}</Typography.Text>
+        </div>
+      ),
     },
     {
       title: '归属地',
       dataIndex: 'location',
-      key: 'location',
+      width: 120,
+      ellipsis: true
     },
     {
       title: '被攻击IP',
       dataIndex: 'targetIp',
-      key: 'targetIp',
+      width: 220,
+      ellipsis: true,
+      render: (ip: string) => (
+        <Typography.Text copyable style={{ width: 180 }} ellipsis>{ip}</Typography.Text>
+      )
     },
     {
       title: '被攻击端口',
       dataIndex: 'targetPort',
-      key: 'targetPort',
+      width: 120,
+      ellipsis: true
     },
     {
       title: '情报类型',
       dataIndex: 'intelType',
-      key: 'intelType',
+      width: 150,
+      ellipsis: true
     },
     {
       title: '威胁等级',
       dataIndex: 'threatLevel',
-      key: 'threatLevel',
+      width: 120,
+      ellipsis: true,
       render: (text: string) => {
         const colors = {
           '高危': 'red',
           '中危': 'orange',
           '低危': 'blue',
         };
-        return <span style={{ color: colors[text as keyof typeof colors] }}>{text}</span>;
+        return <Tag color={colors[text as keyof typeof colors]}>{text}</Tag>;
       },
     },
     {
       title: '处理动作',
       dataIndex: 'action',
-      key: 'action',
+      width: 120,
+      ellipsis: true
     },
     {
       title: '命中情报源',
       dataIndex: 'intelSource',
-      key: 'intelSource',
+      width: 150,
+      ellipsis: true
     },
     {
       title: '最近攻击单位',
       dataIndex: 'lastAttackUnit',
-      key: 'lastAttackUnit',
+      width: 150,
+      ellipsis: true
     },
     {
       title: '规则',
       dataIndex: 'rule',
-      key: 'rule',
+      width: 120,
+      ellipsis: true
     },
     {
       title: '资产组',
       dataIndex: 'assetGroup',
-      key: 'assetGroup',
+      width: 120,
+      ellipsis: true
     },
     {
       title: '操作',
       key: 'operation',
+      fixed: 'right',
+      width: 160,
       render: (_: any, record: any) => (
         <Space>
-          <Button 
-            type="link" 
+          <Button
+            type="link"
             onClick={() => {
               setSelectedLog(record);
               setIsDetailVisible(true);
@@ -172,7 +246,7 @@ const AttackLogs: React.FC = () => {
           <Button type="link">误报加白</Button>
         </Space>
       ),
-    },
+    }
   ];
 
   // 模拟数据生成函数
@@ -181,7 +255,7 @@ const AttackLogs: React.FC = () => {
       '北京', '上海', '广州', '深圳', '杭州',  // 中国城市
       '美国', '俄罗斯', '日本', '德国', '法国'  // 国外
     ];
-    
+
     return Array.from({ length: 100 }, (_, index) => ({
       key: String(index + 1),
       time: `2024-12-15 ${String(Math.floor(Math.random() * 24)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
@@ -297,14 +371,14 @@ const AttackLogs: React.FC = () => {
       message.warning('请至少设置一个筛选条件');
       return;
     }
-    
+
     const newFilter: SavedFilter = {
       id: Date.now().toString(),
       name: filterName,
       conditions: currentValues,
       createTime: new Date().toLocaleString()
     };
-    
+
     saveToLocalStorage([...savedFilters, newFilter]);
     setIsModalVisible(false);
     setFilterName('');
@@ -324,25 +398,62 @@ const AttackLogs: React.FC = () => {
     message.success('删除成功');
   };
 
-  // 构建下拉菜单
-
   return (
-    <>
-      <Card style={{ marginBottom: '24px', backgroundColor: 'white' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <div style={{ width: '48%' }}>
-            <AttackTrendChart />
-          </div>
-          <div style={{ width: '48%' }}>
-            <IntelTypeChart />
-          </div>
-        </div>
-      </Card>
+    <div>
+      {/* 图表区域 */}
+      <div style={{ position: 'relative', marginBottom: '24px' }}>
+        <Card style={{ marginBottom: isChartsExpanded ? '24px' : '0' }}>
+          {isChartsExpanded ? (
+            <>
+              <Row gutter={24}>
+                <Col span={16}>
+                  <AttackTrendChart />
+                </Col>
+                <Col span={8} style={{ position: 'relative' }}>
+                  <div style={{ position: 'absolute', right: 12, top: -4, zIndex: 1 }}>
+                    <Button 
+                      type="link" 
+                      onClick={() => setIsChartsExpanded(!isChartsExpanded)}
+                      style={{ padding: '4px 0' }}
+                    >
+                      收起图表
+                    </Button>
+                  </div>
+                  <IntelTypeChart />
+                </Col>
+              </Row>
+            </>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ flex: 1 }}>
+                <CollapsedCharts 
+                  trendData={[
+                    { date: '2024年8月7日', high: 934, medium: 1498, low: 3065 },
+                    { date: '2024年8月6日', high: 856, medium: 1389, low: 2987 },
+                    { date: '2024年8月5日', high: 912, medium: 1456, low: 3123 }
+                  ]} 
+                  intelTypeData={[
+                    { type: '注入攻击', count: 2345, percentage: 23.45 },
+                    { type: 'XSS攻击', count: 1234, percentage: 12.34 },
+                    { type: '暴力破解', count: 987, percentage: 9.87 }
+                  ]} 
+                />
+              </div>
+              <Button 
+                type="link" 
+                onClick={() => setIsChartsExpanded(!isChartsExpanded)}
+                style={{ padding: '4px 0', marginLeft: '16px' }}
+              >
+                展开图表
+              </Button>
+            </div>
+          )}
+        </Card>
+      </div>
       <Card style={{ backgroundColor: 'white' }}>
         <Form
           form={form}
-          onFinish={handleFilter}
-          style={{ marginBottom: '24px' }}
+          style={{ marginBottom: '16px' }}
         >
           <Row gutter={[16, 16]}>
             <Col span={6}>
@@ -443,7 +554,7 @@ const AttackLogs: React.FC = () => {
                   allowClear
                   showSearch={{
                     filter: (inputValue, path) => {
-                      return path.some(option => 
+                      return path.some(option =>
                         option.label.toLowerCase().indexOf(inputValue.toLowerCase()) > -1
                       );
                     },
@@ -454,7 +565,7 @@ const AttackLogs: React.FC = () => {
             <Col span={6} style={{ display: 'flex', alignItems: 'flex-end' }}>
               <Form.Item style={{ marginBottom: 0 }}>
                 <Space>
-                  <Button type="primary" htmlType="submit">
+                  <Button type="primary" htmlType="submit" onClick={handleFilter}>
                     筛选
                   </Button>
                   <Button onClick={handleReset}>
@@ -462,6 +573,12 @@ const AttackLogs: React.FC = () => {
                   </Button>
                   <Button onClick={() => setIsModalVisible(true)}>
                     保存条件
+                  </Button>
+                  <Button
+                    icon={<StarOutlined />}
+                    onClick={showIpDrawer}
+                  >
+                    IP收藏夹
                   </Button>
                 </Space>
               </Form.Item>
@@ -471,7 +588,7 @@ const AttackLogs: React.FC = () => {
 
         <Modal
           title="保存筛选条件"
-          visible={isModalVisible}
+          open={isModalVisible}
           onOk={handleSaveFilter}
           onCancel={() => {
             setIsModalVisible(false);
@@ -495,6 +612,21 @@ const AttackLogs: React.FC = () => {
           </Form>
         </Modal>
 
+        {/* IP收藏夹抽屉 */}
+        <Drawer
+          title={
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Typography.Title level={4} style={{ margin: 0, fontSize: '18px' }}>IP收藏夹</Typography.Title>
+            </div>
+          }
+          placement="right"
+          width="clamp(600px, 30%, 100%)"
+          onClose={closeIpDrawer}
+          open={isIpDrawerVisible}
+        >
+          <IpFavorites />
+        </Drawer>
+
         <Space style={{ marginBottom: '16px' }}>
           {selectedRows.length > 0 && (
             <>
@@ -502,7 +634,7 @@ const AttackLogs: React.FC = () => {
               <Button onClick={() => setSelectedRows([])}>清空</Button>
             </>
           )}
-          <Button onClick={() => {/* 刷新逻辑 */}}>刷新</Button>
+          <Button onClick={() => {/* 刷新逻辑 */ }}>刷新</Button>
         </Space>
         <Table
           columns={columns}
@@ -511,6 +643,7 @@ const AttackLogs: React.FC = () => {
             selectedRowKeys: selectedRows.map(row => row.key),
             onChange: (_, rows) => setSelectedRows(rows),
           }}
+          scroll={{ x: 2000 }}
           pagination={{
             total: filteredData.length,
             pageSize: 10,
@@ -548,7 +681,7 @@ const AttackLogs: React.FC = () => {
         open={isDetailVisible}
         onClose={() => setIsDetailVisible(false)}
       />
-    </>
+    </div>
   );
 };
 

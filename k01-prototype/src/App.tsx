@@ -4,6 +4,7 @@ import AttackLogs from './pages/AttackLogs';
 import PasswordPolicy from './pages/PasswordPolicy';
 import Dashboard from './pages/Dashboard';
 import ExternalConnectionLogs from './pages/ExternalConnectionLogs';
+import PublicIntelligence from './pages/PublicIntelligence';
 import './App.css';
 
 function App() {
@@ -25,7 +26,7 @@ function App() {
           <Route path="mapping-source-analysis" element={<div>测绘源分析</div>} />
           <Route path="mapping-target-analysis" element={<div>测绘目的分析</div>} />
           <Route path="intelligence-tracing" element={<div>威胁情报溯源</div>} />
-          <Route path="public-intelligence" element={<div>公有情报管理</div>} />
+          <Route path="public-intelligence" element={<PublicIntelligence />} />
           <Route path="private-intelligence" element={<div>私有情报管理</div>} />
           <Route path="false-positive" element={<div>误报反馈</div>} />
           <Route path="application-hiding" element={<div>应用隐身</div>} />

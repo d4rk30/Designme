@@ -109,7 +109,7 @@ export const IntelTypeChart: React.FC = () => {
     <>
       <div style={{ marginBottom: '8px', marginLeft: '12px' }}>
         <span style={{ fontWeight: 500 }}>情报类型TOP10</span>
-        <span style={{ fontSize: '12px', color: '#8c8c8c', marginLeft: '4px' }}>（单位：次数）</span>
+        <span style={{ fontSize: '12px', color: '#8c8c8c', marginLeft: '4px' }}>（单位：百分比）</span>
       </div>
       <ReactECharts 
         option={option} 

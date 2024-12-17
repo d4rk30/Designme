@@ -1,23 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Space, Input, Form, Select, Row, Col, Cascader, Modal, message } from 'antd';
+import { Card, Table, Button, Space, Input, Form, Select, Row, Col, Cascader, Modal, message, Tag, Typography } from 'antd';
 import { AttackTrendChart } from '../components/AttackTrendChart';
 import { IntelTypeChart } from '../components/IntelTypeChart';
-import AttackLogDetail from '../components/AttackLogDetail';
+import ExternalConnectionDetail from '../components/ExternalConnectionDetail';
 import dayjs, { Dayjs } from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import moment from 'moment';
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
 interface FilterValues {
-  intelType?: string;
-  intelSource?: string;
+  hitType?: string;
   action?: string;
-  attackIp?: string;
-  targetIp?: string;
-  location?: string[];
-  dateRange?: [Dayjs, Dayjs] | null;
+  targetType?: string;
+  controlledHost?: string;
+  externalDomain?: string;
+  destinationIp?: string;
+  savedFilter?: string;
+  threatLevel?: string;
 }
 
 interface SavedFilter {
@@ -28,16 +30,20 @@ interface SavedFilter {
 }
 
 const ExternalConnectionLogs: React.FC = () => {
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
-  const [filterValues, setFilterValues] = useState<FilterValues>({});
+  // 合并状态
+  const [state, setState] = useState({
+    selectedRows: [] as string[],
+    filterValues: {} as FilterValues,
+    savedFilters: [] as SavedFilter[],
+    isModalVisible: false,
+    filterName: '',
+    isDetailVisible: false,
+    selectedLog: null,
+  });
+
+  const { selectedRows, filterValues, savedFilters, isModalVisible, filterName, isDetailVisible, selectedLog } = state;
+
   const [form] = Form.useForm();
-  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([]);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [filterName, setFilterName] = useState('');
-  const [isDetailVisible, setIsDetailVisible] = useState(false);
-  const [selectedLog, setSelectedLog] = useState<any>(null);
-  const [] = useState(false);
-  const [] = useState<[Dayjs, Dayjs] | null>(null);
 
   // 归属地数据
   const locationOptions = [
@@ -89,9 +95,9 @@ const ExternalConnectionLogs: React.FC = () => {
 
   // 筛选选项
   const filterOptions = {
-    intelType: ['僵尸网络', '恶意软件', 'DDoS攻击', '漏洞利用', '暴力破解', '钓鱼攻击'],
+    hitType: ['情报命中', '规则命中', 'AI检测', '行为分析'],
     action: ['阻断', '监控'],
-    intelSource: ['公有情报源', '私有情报源', '第三方情报源', '自建情报源'],
+    targetType: ['C2服务器', '恶意域名', '挖矿节点', '僵尸网络'],
   };
 
   // 表格列定义
@@ -99,208 +105,315 @@ const ExternalConnectionLogs: React.FC = () => {
     {
       title: '时间',
       dataIndex: 'time',
-      key: 'time',
+      width: 180,
+      render: (time: string) => moment(time).format('YYYY-MM-DD HH:mm:ss')
     },
     {
-      title: '攻击IP',
+      title: '受控主机',
       dataIndex: 'attackIp',
-      key: 'attackIp',
+      width: 180,
+      render: (ip: string) => (
+        <div style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
+          <Typography.Text copyable={{ text: ip }} style={{ margin: 0 }}>
+            {ip}
+          </Typography.Text>
+        </div>
+      )
     },
     {
-      title: '归属地',
-      dataIndex: 'location',
-      key: 'location',
+      title: '源端口',
+      dataIndex: 'sourcePort',
+      width: 100,
     },
     {
-      title: '被攻击IP',
+      title: '外联域名/URL',
+      dataIndex: ['requestInfo', 'url'],
+      width: 240,
+      ellipsis: true,
+      render: (url: string, record: { requestInfo: { dnsName: any; }; }) => {
+        const displayText = url || record.requestInfo?.dnsName || '-';
+        return (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            maxWidth: '100%'
+          }}>
+            <Typography.Text
+              copyable={{ text: displayText }}
+              ellipsis={{ tooltip: displayText }}
+              style={{ margin: 0, maxWidth: '100%' }}
+            >
+              {displayText}
+            </Typography.Text>
+          </div>
+        );
+      }
+    },
+    {
+      title: '下一跳DNS',
+      dataIndex: ['requestInfo', 'nextHopDns'],
+      width: 180,
+      render: (dns: string) => {
+        if (!dns) {
+          return null;
+        }
+        return (
+          <div style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
+            <Typography.Text copyable={{ text: dns }} style={{ margin: 0 }}>
+              {dns}
+            </Typography.Text>
+          </div>
+        );
+      }
+    },
+    {
+      title: '目的IP',
       dataIndex: 'targetIp',
-      key: 'targetIp',
+      width: 180,
+      render: (ip: string) => (
+        <div style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
+          <Typography.Text copyable={{ text: ip }} style={{ margin: 0 }}>
+            {ip}
+          </Typography.Text>
+        </div>
+      )
     },
     {
-      title: '被攻击端口',
+      title: '目的端口',
       dataIndex: 'targetPort',
-      key: 'targetPort',
+      width: 100,
     },
     {
-      title: '情报类型',
-      dataIndex: 'intelType',
-      key: 'intelType',
+      title: '目标类型',
+      dataIndex: 'targetType',
+      width: 120,
+      render: (type: string) => <Tag>{type || '-'}</Tag>
+    },
+    {
+      title: '命中类型',
+      dataIndex: 'hitType',
+      width: 120,
+      render: (type: string) => <Tag>{type || '-'}</Tag>
     },
     {
       title: '威胁等级',
       dataIndex: 'threatLevel',
-      key: 'threatLevel',
-      render: (text: string) => {
-        const colors = {
+      width: 100,
+      render: (level: string) => {
+        const color = {
           '高危': 'red',
           '中危': 'orange',
-          '低危': 'blue',
-        };
-        return <span style={{ color: colors[text as keyof typeof colors] }}>{text}</span>;
-      },
+          '低危': 'green'
+        }[level] || 'default';
+        return <Tag color={color}>{level}</Tag>;
+      }
     },
     {
       title: '处理动作',
       dataIndex: 'action',
-      key: 'action',
-    },
-    {
-      title: '命中情报源',
-      dataIndex: 'intelSource',
-      key: 'intelSource',
-    },
-    {
-      title: '最近攻击单位',
-      dataIndex: 'lastAttackUnit',
-      key: 'lastAttackUnit',
-    },
-    {
-      title: '规则',
-      dataIndex: 'rule',
-      key: 'rule',
-    },
-    {
-      title: '资产组',
-      dataIndex: 'assetGroup',
-      key: 'assetGroup',
+      width: 100,
+      render: (action: string) => {
+        const color = action === '阻断' ? 'red' : 'blue';
+        return <Tag color={color}>{action}</Tag>;
+      }
     },
     {
       title: '操作',
       key: 'operation',
+      width: 160,
+      fixed: 'right',
       render: (_: any, record: any) => (
         <Space>
-          <Button 
-            type="link" 
+          <Button
+            type="link"
+            size="small"
             onClick={() => {
-              setSelectedLog(record);
-              setIsDetailVisible(true);
+              setState({
+                ...state,
+                selectedLog: record,
+                isDetailVisible: true
+              });
             }}
           >
             详情
           </Button>
-          <Button type="link">误报加白</Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => {/* 误报加白逻辑 */ }}
+          >
+            误报加白
+          </Button>
         </Space>
-      ),
-    },
+      )
+    }
   ];
 
-  // 模拟数据生成函数
-  const generateMockData = () => {
-    const locations = [
-      '北京', '上海', '广州', '深圳', '杭州',  // 中国城市
-      '美国', '俄罗斯', '日本', '德国', '法国'  // 国外
+  // 生成模拟数据
+  const generateMockData = (count: number) => {
+    const protocols = ['HTTP', 'HTTPS', 'FTP', 'DNS'];
+    const targetTypes = ['C2服务器', '恶意域名', '挖矿节点', '僵尸网络'];
+    const hitTypes = ['情报命中', '规则命中', 'AI检测', '行为分析'];
+    const threatLevels = ['高危', '中危', '低危'];
+    const actions = ['监控', '阻断'];
+    const domains = ['evil.com', 'malware.net', 'hack.org', 'attack.cn'];
+    const dnsServers = ['8.8.8.8', '8.8.4.4', '1.1.1.1', '114.114.114.114', '223.5.5.5', '223.6.6.6'];
+    const intelSources = ['威胁情报', '安全社区', '自定义规则', '系统检测'];
+    const methods = ['GET', 'POST', 'PUT', 'DELETE'];
+    const contentTypes = ['application/json', 'text/html', 'application/x-www-form-urlencoded'];
+    const userAgents = [
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0'
     ];
-    
-    return Array.from({ length: 100 }, (_, index) => ({
-      key: String(index + 1),
-      time: `2024-12-15 ${String(Math.floor(Math.random() * 24)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
-      attackIp: `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`,
-      location: locations[Math.floor(Math.random() * locations.length)],
-      targetIp: `192.168.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`,
-      targetPort: String(Math.floor(Math.random() * 65535)),
-      intelType: ['僵尸网络', '恶意软件', 'DDoS攻击', '漏洞利用', '暴力破解', '钓鱼攻击'][Math.floor(Math.random() * 6)],
-      threatLevel: ['高危', '中危', '低危'][Math.floor(Math.random() * 3)],
-      action: ['阻断', '监控'][Math.floor(Math.random() * 2)],
-      intelSource: ['公有情报源', '私有情报源', '第三方情报源', '自建情报源'][Math.floor(Math.random() * 4)],
-      lastAttackUnit: [`${Math.floor(Math.random() * 24)}小时前`, `${Math.floor(Math.random() * 60)}分钟前`][Math.floor(Math.random() * 2)],
-      rule: `Rule-${Math.floor(Math.random() * 1000)}`,
-      assetGroup: ['核心资产', '测试资产', '开发资产', '生产资产'][Math.floor(Math.random() * 4)],
-      requestInfo: {
-        protocol: ['http', 'https', 'dns', 'ftp', 'smtp'][Math.floor(Math.random() * 5)],
-        url: `example.com/api/endpoint/${Math.floor(Math.random() * 1000)}`,
-        dnsName: `subdomain${Math.floor(Math.random() * 100)}.example.com`,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'X-Forwarded-For': `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`,
-          'Host': 'example.com',
-          'Connection': 'keep-alive',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+
+    const getRandomElement = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
+    const getRandomPort = () => Math.floor(Math.random() * 65535);
+    const getRandomIP = () => `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+
+    return Array.from({ length: count }, (_, i) => {
+      const protocol = getRandomElement(protocols);
+      const domain = getRandomElement(domains);
+      const url = protocol === 'DNS' ? '' : `${protocol.toLowerCase()}://${domain}/path/to/resource`;
+      const method = getRandomElement(methods);
+      const contentType = getRandomElement(contentTypes);
+      const userAgent = getRandomElement(userAgents);
+      const requestSize = Math.floor(Math.random() * 1000) + 100;
+      const responseSize = Math.floor(Math.random() * 2000) + 200;
+      const statusCode = Math.random() > 0.8 ? getRandomElement([400, 403, 404, 500, 502, 503]) : 200;
+
+      return {
+        id: `${i}`,
+        time: moment().subtract(Math.floor(Math.random() * 7), 'days')
+          .subtract(Math.floor(Math.random() * 24), 'hours')
+          .subtract(Math.floor(Math.random() * 60), 'minutes')
+          .format('YYYY-MM-DD HH:mm:ss'),
+        attackIp: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+        sourcePort: getRandomPort(),
+        requestInfo: {
+          protocol,
+          url: url || `${protocol.toLowerCase()}://${domain}/path/to/resource`,
+          dnsName: protocol === 'DNS' ? domain : '',
+          nextHopDns: getRandomElement(dnsServers),
+          method,
+          headers: {
+            'Host': domain,
+            'User-Agent': userAgent,
+            'Accept': '*/*',
+            'Accept-Language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Content-Type': contentType,
+            'Content-Length': requestSize.toString(),
+            'X-Forwarded-For': getRandomIP(),
+            'X-Real-IP': getRandomIP()
+          },
+          body: protocol === 'DNS' ? null : {
+            type: contentType,
+            size: `${requestSize} bytes`,
+            content: 'Base64编码的请求内容...',
+            params: {
+              key1: 'value1',
+              key2: 'value2',
+              timestamp: new Date().getTime()
+            }
+          }
         },
-        body: {
-          payload: 'Base64编码的请求内容...',
-          size: Math.floor(Math.random() * 1000) + 'bytes',
-          type: ['SQL注入', 'XSS攻击', '命令注入', 'WebShell'][Math.floor(Math.random() * 4)],
-          timestamp: new Date().toISOString()
-        }
-      },
-      responseInfo: {
-        headers: {
-          'Content-Type': 'application/json',
-          'Server': 'nginx/1.18.0',
-          'Date': new Date().toUTCString(),
-          'Content-Length': String(Math.floor(Math.random() * 1000))
+        responseInfo: protocol === 'DNS' ? null : {
+          statusCode,
+          headers: {
+            'Content-Type': contentType,
+            'Content-Length': responseSize.toString(),
+            'Server': 'nginx/1.18.0',
+            'Date': new Date().toUTCString(),
+            'Connection': 'keep-alive',
+            'X-Powered-By': 'PHP/7.4.0',
+            'Cache-Control': 'no-cache, private'
+          },
+          body: {
+            type: contentType,
+            size: `${responseSize} bytes`,
+            content: 'Base64编码的响应内容...',
+            data: statusCode === 200 ? {
+              code: 0,
+              message: 'success',
+              data: {
+                id: Math.floor(Math.random() * 1000),
+                name: 'Sample Response',
+                timestamp: new Date().getTime()
+              }
+            } : {
+              code: statusCode,
+              message: 'error',
+              error: 'Request failed'
+            }
+          }
         },
-        body: {
-          status: [200, 400, 403, 404, 500][Math.floor(Math.random() * 5)],
-          message: ['Success', 'Bad Request', 'Forbidden', 'Not Found', 'Server Error'][Math.floor(Math.random() * 5)],
-          data: 'Base64编码的响应内容...'
+        targetIp: `10.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+        targetPort: getRandomPort(),
+        targetType: getRandomElement(targetTypes),
+        hitType: getRandomElement(hitTypes),
+        threatLevel: getRandomElement(threatLevels),
+        action: getRandomElement(actions),
+        intelSource: getRandomElement(intelSources),
+        localVerification: {
+          ruleName: ['SQL注入检测', 'XSS攻击检测', '命令注入检测', 'WebShell检测'][Math.floor(Math.random() * 4)],
+          protocolNumber: '323-2',
+          protocolType: protocol,
+          attackType: ['SQL注入', 'XSS攻击', '命令注入', 'WebShell'][Math.floor(Math.random() * 4)],
+          malformedPacketLength: Math.floor(Math.random() * 1000),
+          attackFeatures: ['特征1：异常字符串', '特征2：恶意代码片段', '特征3：非法请求参数'][Math.floor(Math.random() * 3)]
         }
-      },
-      localVerification: {
-        ruleName: ['SQL注入检测', 'XSS攻击检测', '命令注入检测', 'WebShell检测'][Math.floor(Math.random() * 4)],
-        protocolNumber: '323-2',
-        protocolType: 'HTTPS',
-        attackType: ['SQL注入', 'XSS攻击', '命令注入', 'WebShell'][Math.floor(Math.random() * 4)],
-        malformedPacketLength: Math.floor(Math.random() * 1000),
-        attackFeatures: ['特征1：异常字符串', '特征2：恶意代码片段', '特征3：非法请求参数'][Math.floor(Math.random() * 3)]
-      }
-    }));
+      };
+    });
   };
 
-  const data = generateMockData();
+  // 在组件加载时生成模拟数据
+  const [logs, setLogs] = useState([]);
+  useEffect(() => {
+    const mockData = generateMockData(100);
+    setLogs(mockData);
+  }, []);
 
   // 筛选数据
-  const filteredData = data.filter(item => {
+  const filteredData = logs.filter(item => {
     return (
-      (!filterValues.intelType || item.intelType === filterValues.intelType) &&
-      (!filterValues.intelSource || item.intelSource === filterValues.intelSource) &&
+      (!filterValues.hitType || item.hitType === filterValues.hitType) &&
       (!filterValues.action || item.action === filterValues.action) &&
-      (!filterValues.attackIp || item.attackIp.toLowerCase().includes(filterValues.attackIp.toLowerCase())) &&
-      (!filterValues.targetIp || item.targetIp.toLowerCase().includes(filterValues.targetIp.toLowerCase())) &&
-      (!filterValues.location || filterValues.location.length === 0 || (() => {
-        const [category, specific] = filterValues.location;
-        if (category === 'world') {
-          return true;  // 世界包含所有位置
-        } else if (category === 'china') {
-          return item.location === specific;  // 中国城市精确匹配
-        } else if (category === 'foreign') {
-          return item.location === specific;  // 国外国家精确匹配
-        }
-        return false;
-      })()) &&
-      (!filterValues.dateRange || (
-        dayjs(item.time).isSameOrAfter(filterValues.dateRange[0]) &&
-        dayjs(item.time).isSameOrBefore(filterValues.dateRange[1])
-      ))
+      (!filterValues.targetType || item.targetType === filterValues.targetType) &&
+      (!filterValues.controlledHost || item.attackIp.toLowerCase().includes(filterValues.controlledHost.toLowerCase())) &&
+      (!filterValues.externalDomain ||
+        (item.requestInfo?.url?.toLowerCase().includes(filterValues.externalDomain.toLowerCase()) ||
+          item.requestInfo?.dnsName?.toLowerCase().includes(filterValues.externalDomain.toLowerCase()))) &&
+      (!filterValues.destinationIp || item.targetIp.toLowerCase().includes(filterValues.destinationIp.toLowerCase())) &&
+      (!filterValues.threatLevel || item.threatLevel === filterValues.threatLevel) &&
+      (!filterValues.savedFilter || filterValues.savedFilter === 'all')
     );
   });
 
   // 处理筛选表单提交
   const handleFilter = (values: FilterValues) => {
-    setFilterValues(values);
+    setState({ ...state, filterValues: values });
   };
 
   // 重置筛选
   const handleReset = () => {
     form.resetFields();
-    setFilterValues({});
+    setState({ ...state, filterValues: {} });
   };
 
   // 从 localStorage 加载保存的筛选条件
   useEffect(() => {
     const saved = localStorage.getItem('attackLogsSavedFilters');
     if (saved) {
-      setSavedFilters(JSON.parse(saved));
+      setState({ ...state, savedFilters: JSON.parse(saved) });
     }
   }, []);
 
   // 保存筛选条件到 localStorage
   const saveToLocalStorage = (filters: SavedFilter[]) => {
     localStorage.setItem('attackLogsSavedFilters', JSON.stringify(filters));
-    setSavedFilters(filters);
+    setState({ ...state, savedFilters: filters });
   };
 
   // 保存当前筛选条件
@@ -310,24 +423,23 @@ const ExternalConnectionLogs: React.FC = () => {
       message.warning('请至少设置一个筛选条件');
       return;
     }
-    
+
     const newFilter: SavedFilter = {
       id: Date.now().toString(),
       name: filterName,
       conditions: currentValues,
       createTime: new Date().toLocaleString()
     };
-    
+
     saveToLocalStorage([...savedFilters, newFilter]);
-    setIsModalVisible(false);
-    setFilterName('');
+    setState({ ...state, isModalVisible: false, filterName: '' });
     message.success('筛选条件保存成功');
   };
 
   // 应用保存的筛选条件
   const applyFilter = (filter: SavedFilter) => {
     form.setFieldsValue(filter.conditions);
-    setFilterValues(filter.conditions);
+    setState({ ...state, filterValues: filter.conditions });
   };
 
   // 删除保存的筛选条件
@@ -356,10 +468,11 @@ const ExternalConnectionLogs: React.FC = () => {
           form={form}
           onFinish={handleFilter}
           style={{ marginBottom: '24px' }}
+          layout="inline"
         >
           <Row gutter={[16, 16]}>
             <Col span={6}>
-              <Form.Item name="savedFilter" label="快捷搜索" style={{ marginBottom: 0 }}>
+              <Form.Item name="savedFilter" label="快速搜索" style={{ marginBottom: 0 }}>
                 <Select
                   placeholder="选择已保存的筛选条件"
                   allowClear
@@ -396,13 +509,6 @@ const ExternalConnectionLogs: React.FC = () => {
                                 删除
                               </Button>
                             </div>
-                            <style>
-                              {`
-                                .filter-item:hover {
-                                  background-color: #f5f5f5;
-                                }
-                              `}
-                            </style>
                           </div>
                         ))
                       )}
@@ -412,56 +518,58 @@ const ExternalConnectionLogs: React.FC = () => {
               </Form.Item>
             </Col>
             <Col span={6}>
-              <Form.Item name="intelType" label="情报类型" style={{ marginBottom: 0 }}>
+              <Form.Item name="hitType" label="命中类型" style={{ marginBottom: 0 }}>
                 <Select
                   allowClear
-                  placeholder="请选择情报类型"
-                  options={filterOptions.intelType.map(item => ({ label: item, value: item }))}
+                  placeholder="请选择命中类型"
+                  options={filterOptions.hitType.map(item => ({ label: item, value: item }))}
                 />
               </Form.Item>
             </Col>
             <Col span={6}>
-              <Form.Item name="intelSource" label="命中情报源" style={{ marginBottom: 0 }}>
+              <Form.Item name="action" label="处置动作" style={{ marginBottom: 0 }}>
                 <Select
                   allowClear
-                  placeholder="请选择情报源"
-                  options={filterOptions.intelSource.map(item => ({ label: item, value: item }))}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name="action" label="处理动作" style={{ marginBottom: 0 }}>
-                <Select
-                  allowClear
-                  placeholder="请选择处理动作"
+                  placeholder="请选择处置动作"
                   options={filterOptions.action.map(item => ({ label: item, value: item }))}
                 />
               </Form.Item>
             </Col>
             <Col span={6}>
-              <Form.Item name="attackIp" label="攻击IP" style={{ marginBottom: 0 }}>
-                <Input placeholder="请输入攻击IP" allowClear />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name="targetIp" label="被攻击IP" style={{ marginBottom: 0 }}>
-                <Input placeholder="请输入被攻击IP" allowClear />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name="location" label="归属地" style={{ marginBottom: 0 }}>
-                <Cascader
-                  options={locationOptions}
-                  placeholder="请选择归属地"
+              <Form.Item name="targetType" label="目标类型" style={{ marginBottom: 0 }}>
+                <Select
                   allowClear
-                  showSearch={{
-                    filter: (inputValue, path) => {
-                      return path.some(option => 
-                        option.label.toLowerCase().indexOf(inputValue.toLowerCase()) > -1
-                      );
-                    },
-                  }}
+                  placeholder="请选择目标类型"
+                  options={filterOptions.targetType.map(item => ({ label: item, value: item }))}
                 />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item name="threatLevel" label="威胁等级" style={{ marginBottom: 0 }}>
+                <Select
+                  allowClear
+                  placeholder="请选择威胁等级"
+                  options={[
+                    { value: '高', label: '高' },
+                    { value: '中', label: '中' },
+                    { value: '低', label: '低' }
+                  ]}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item name="controlledHost" label="受控主机" style={{ marginBottom: 0 }}>
+                <Input placeholder="请输入受控主机" allowClear />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item name="externalDomain" label="外联域名/URL" style={{ marginBottom: 0 }}>
+                <Input placeholder="请输入外联域名或URL" allowClear />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item name="destinationIp" label="目的IP" style={{ marginBottom: 0 }}>
+                <Input placeholder="请输入目的IP" allowClear />
               </Form.Item>
             </Col>
             <Col span={6} style={{ display: 'flex', alignItems: 'flex-end' }}>
@@ -473,7 +581,7 @@ const ExternalConnectionLogs: React.FC = () => {
                   <Button onClick={handleReset}>
                     重置
                   </Button>
-                  <Button onClick={() => setIsModalVisible(true)}>
+                  <Button onClick={() => setState({ ...state, isModalVisible: true })}>
                     保存条件
                   </Button>
                 </Space>
@@ -487,8 +595,7 @@ const ExternalConnectionLogs: React.FC = () => {
           visible={isModalVisible}
           onOk={handleSaveFilter}
           onCancel={() => {
-            setIsModalVisible(false);
-            setFilterName('');
+            setState({ ...state, isModalVisible: false, filterName: '' });
           }}
           okText="保存"
           cancelText="取消"
@@ -502,7 +609,7 @@ const ExternalConnectionLogs: React.FC = () => {
               <Input
                 placeholder="请输入名称"
                 value={filterName}
-                onChange={e => setFilterName(e.target.value)}
+                onChange={e => setState({ ...state, filterName: e.target.value })}
               />
             </Form.Item>
           </Form>
@@ -512,18 +619,15 @@ const ExternalConnectionLogs: React.FC = () => {
           {selectedRows.length > 0 && (
             <>
               <Button type="primary">导出</Button>
-              <Button onClick={() => setSelectedRows([])}>清空</Button>
+              <Button onClick={() => setState({ ...state, selectedRows: [] })}>清空</Button>
             </>
           )}
-          <Button onClick={() => {/* 刷新逻辑 */}}>刷新</Button>
+          <Button onClick={() => {/* 刷新逻辑 */ }}>刷新</Button>
         </Space>
         <Table
           columns={columns}
           dataSource={filteredData}
-          rowSelection={{
-            selectedRowKeys: selectedRows.map(row => row.key),
-            onChange: (_, rows) => setSelectedRows(rows),
-          }}
+          rowKey="id"
           pagination={{
             total: filteredData.length,
             pageSize: 10,
@@ -531,9 +635,15 @@ const ExternalConnectionLogs: React.FC = () => {
             showQuickJumper: true,
             showTotal: (total) => `共 ${total} 条记录`,
           }}
+          scroll={{ x: 1800 }}
+          rowSelection={{
+            type: 'checkbox',
+            selectedRowKeys: selectedRows,
+            onChange: (selectedRowKeys) => setState({ ...state, selectedRows: selectedRowKeys as string[] }),
+          }}
         />
       </Card>
-      <AttackLogDetail
+      <ExternalConnectionDetail
         data={selectedLog || {
           time: '',
           attackIp: '',
@@ -559,7 +669,7 @@ const ExternalConnectionLogs: React.FC = () => {
           }
         }}
         open={isDetailVisible}
-        onClose={() => setIsDetailVisible(false)}
+        onClose={() => setState({ ...state, isDetailVisible: false })}
       />
     </>
   );
