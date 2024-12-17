@@ -172,15 +172,15 @@ const AttackLogDetail: React.FC<AttackLogDetailProps> = ({
       label: '日志信息',
       children: (
         <Space direction="vertical" style={{ width: '100%' }} size="large">
-          <Card 
+          <Card
             title="告警信息详情"
             extra={
               <Space size={16} align="center">
                 <Typography.Text type="secondary" style={{ fontSize: '14px' }}>
                   攻击者IP
                 </Typography.Text>
-                <Button 
-                  type="text" 
+                <Button
+                  type="text"
                   size="small"
                   style={{ color: '#1677ff' }}
                   onClick={() => handleOpenTimeModal('black')}
@@ -190,8 +190,8 @@ const AttackLogDetail: React.FC<AttackLogDetailProps> = ({
                     加入黑名单
                   </Space>
                 </Button>
-                <Button 
-                  type="text" 
+                <Button
+                  type="text"
                   size="small"
                   style={{ color: '#1677ff' }}
                   onClick={() => handleOpenTimeModal('white')}
@@ -283,7 +283,7 @@ const AttackLogDetail: React.FC<AttackLogDetailProps> = ({
   const handleConfirmAddToList = () => {
     const selectedUnit = timeUnits.find(unit => unit.value === timeUnit);
     let totalSeconds = 0;
-    
+
     if (selectedUnit?.value === 'forever') {
       totalSeconds = -1;
     } else if (selectedUnit) {
@@ -291,10 +291,9 @@ const AttackLogDetail: React.FC<AttackLogDetailProps> = ({
     }
 
     // TODO: 调用API将IP添加到黑/白名单
-    message.success(`已将IP ${data.attackIp} 添加到${listType === 'black' ? '黑' : '白'}名单，时长：${
-      totalSeconds === -1 ? '永久' : `${duration}${selectedUnit?.label}`
-    }`);
-    
+    message.success(`已将IP ${data.attackIp} 添加到${listType === 'black' ? '黑' : '白'}名单，时长：${totalSeconds === -1 ? '永久' : `${duration}${selectedUnit?.label}`
+      }`);
+
     setTimeModalVisible(false);
   };
 
@@ -302,7 +301,7 @@ const AttackLogDetail: React.FC<AttackLogDetailProps> = ({
     <>
       <Drawer
         title={
-          <div style={{ display: 'flex', alignItems: 'center', height: '32px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Title level={4} style={{ margin: 0, fontSize: '18px' }}>攻击日志详情</Title>
           </div>
         }

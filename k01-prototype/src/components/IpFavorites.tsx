@@ -39,7 +39,7 @@ const IpFavorites: React.FC = () => {
   // 搜索IP
   const handleSearch = (value: string) => {
     setSearchText(value);
-    const filtered = ipList.filter(item => 
+    const filtered = ipList.filter(item =>
       item.ip.toLowerCase().includes(value.toLowerCase())
     );
     setFilteredIpList(filtered);
@@ -50,7 +50,7 @@ const IpFavorites: React.FC = () => {
   const handleDelete = (ip: string) => {
     const newIpList = ipList.filter(item => item.ip !== ip);
     setIpList(newIpList);
-    setFilteredIpList(newIpList.filter(item => 
+    setFilteredIpList(newIpList.filter(item =>
       item.ip.toLowerCase().includes(searchText.toLowerCase())
     ));
     localStorage.setItem('favoriteIps', JSON.stringify(newIpList));
@@ -69,7 +69,7 @@ const IpFavorites: React.FC = () => {
       dataIndex: 'type',
       key: 'type',
       width: '30%',
-      render: (type: 'attack' | 'target') => 
+      render: (type: 'attack' | 'target') =>
         type === 'attack' ? '攻击IP' : '被攻击IP',
     },
     {
@@ -83,9 +83,9 @@ const IpFavorites: React.FC = () => {
           okText="确定"
           cancelText="取消"
         >
-          <Button 
-            type="link" 
-            danger 
+          <Button
+            type="link"
+            danger
             icon={<DeleteOutlined />}
           >
             删除

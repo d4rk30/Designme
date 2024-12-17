@@ -1,0 +1,13 @@
+/* Modal 相关样式覆盖 */
+.ant-modal-header {
+    margin-bottom: 16px !important;
+    /* 修改所有模态框头部的下边距 */
+}
+
+/* 其他全局样式覆盖 */
+.ant-table-cell-fix-right {
+    transition: none !important;
+    /* 移除固定列的过渡动画 */
+}
+
+/* 如果有其他需要全局覆盖的样式，都可以放在这里 */

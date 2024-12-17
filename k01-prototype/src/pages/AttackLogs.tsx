@@ -4,7 +4,7 @@ import { StarOutlined } from '@ant-design/icons';
 import { AttackTrendChart } from '../components/AttackTrendChart';
 import { IntelTypeChart } from '../components/IntelTypeChart';
 import AttackLogDetail from '../components/AttackLogDetail';
-import IpFavorites from '../components/IpFavorites';
+import IpFavoritesDrawer from '../components/IpFavoritesDrawer';
 import CollapsedCharts from '../components/CollapsedCharts';
 
 interface FilterValues {
@@ -412,10 +412,10 @@ const AttackLogs: React.FC = () => {
           {isChartsExpanded ? (
             <>
               <Row gutter={24}>
-                <Col span={16}>
+                <Col span={12}>
                   <AttackTrendChart />
                 </Col>
-                <Col span={8} style={{ position: 'relative' }}>
+                <Col span={12} style={{ position: 'relative' }}>
                   <div style={{ position: 'absolute', right: 12, top: -4, zIndex: 1 }}>
                     <Button
                       type="link"
@@ -619,21 +619,6 @@ const AttackLogs: React.FC = () => {
           </Form>
         </Modal>
 
-        {/* IP收藏夹抽屉 */}
-        <Drawer
-          title={
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Typography.Title level={4} style={{ margin: 0, fontSize: '18px' }}>IP收藏夹</Typography.Title>
-            </div>
-          }
-          placement="right"
-          width="clamp(600px, 30%, 100%)"
-          onClose={closeIpDrawer}
-          open={isIpDrawerVisible}
-        >
-          <IpFavorites />
-        </Drawer>
-
         <Space style={{ marginBottom: '16px' }}>
           {selectedRows.length > 0 && (
             <>
@@ -696,13 +681,10 @@ const AttackLogs: React.FC = () => {
         open={isDetailVisible}
         onClose={() => setIsDetailVisible(false)}
       />
-      <style>
-        {`
-          .custom-table .ant-table-cell-fix-right {
-            transition: none !important;
-          }
-        `}
-      </style>
+      <IpFavoritesDrawer
+        open={isIpDrawerVisible}
+        onClose={closeIpDrawer}
+      />
     </div>
   );
 };
