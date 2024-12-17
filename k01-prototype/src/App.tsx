@@ -5,6 +5,8 @@ import PasswordPolicy from './pages/PasswordPolicy';
 import Dashboard from './pages/Dashboard';
 import ExternalConnectionLogs from './pages/ExternalConnectionLogs';
 import PublicIntelligence from './pages/PublicIntelligence';
+import License from './pages/License';
+import Blacklist from './pages/Blacklist';
 import './App.css';
 
 function App() {
@@ -34,7 +36,7 @@ function App() {
           <Route path="external-policy" element={<div>外联检测策略</div>} />
           <Route path="password-policy" element={<PasswordPolicy />} />
           <Route path="ip-control" element={<div>IP访问控制</div>} />
-          <Route path="blacklist" element={<div>黑白名单</div>} />
+          <Route path="blacklist" element={<Blacklist />} />
           <Route path="mapping-policy" element={<div>反测绘策略</div>} />
           <Route path="report" element={<div>报表导出</div>} />
           <Route path="asset-management" element={<div>防护资产管理</div>} />
@@ -42,7 +44,7 @@ function App() {
           <Route path="system-status" element={<div>系统状态</div>} />
           <Route path="network-config" element={<div>网络配置</div>} />
           <Route path="v01-config" element={<div>V01通道配置</div>} />
-          <Route path="license-auth" element={<div>许可授权</div>} />
+          <Route path="license-auth" element={<License />} />
           <Route path="license-management" element={<div>许可管理</div>} />
           <Route path="syslog-config" element={<div>Syslog配置</div>} />
           <Route path="upgrade" element={<div>升级管理</div>} />
