@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Space, Input, Form, Select, Row, Col, Cascader, Modal, message, Drawer, List, Typography, Tag } from 'antd';
-import { StarOutlined} from '@ant-design/icons';
+import { Card, Table, Button, Space, Input, Form, Select, Row, Col, Cascader, Modal, message, Drawer, Typography, Tag } from 'antd';
+import { StarOutlined } from '@ant-design/icons';
 import { AttackTrendChart } from '../components/AttackTrendChart';
 import { IntelTypeChart } from '../components/IntelTypeChart';
 import AttackLogDetail from '../components/AttackLogDetail';
@@ -230,20 +230,26 @@ const AttackLogs: React.FC = () => {
     {
       title: '操作',
       key: 'operation',
-      fixed: 'right',
-      width: 160,
+      fixed: 'right' as const,
+      width: 180,
       render: (_: any, record: any) => (
-        <Space>
+        <Space size="middle" style={{ paddingRight: 8 }}>
           <Button
             type="link"
             onClick={() => {
               setSelectedLog(record);
               setIsDetailVisible(true);
             }}
+            style={{ padding: '4px 8px' }}
           >
             详情
           </Button>
-          <Button type="link">误报加白</Button>
+          <Button
+            type="link"
+            style={{ padding: '4px 8px' }}
+          >
+            误报加白
+          </Button>
         </Space>
       ),
     }
@@ -411,8 +417,8 @@ const AttackLogs: React.FC = () => {
                 </Col>
                 <Col span={8} style={{ position: 'relative' }}>
                   <div style={{ position: 'absolute', right: 12, top: -4, zIndex: 1 }}>
-                    <Button 
-                      type="link" 
+                    <Button
+                      type="link"
                       onClick={() => setIsChartsExpanded(!isChartsExpanded)}
                       style={{ padding: '4px 0' }}
                     >
@@ -426,21 +432,21 @@ const AttackLogs: React.FC = () => {
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ flex: 1 }}>
-                <CollapsedCharts 
+                <CollapsedCharts
                   trendData={[
                     { date: '2024年8月7日', high: 934, medium: 1498, low: 3065 },
                     { date: '2024年8月6日', high: 856, medium: 1389, low: 2987 },
                     { date: '2024年8月5日', high: 912, medium: 1456, low: 3123 }
-                  ]} 
+                  ]}
                   intelTypeData={[
                     { type: '注入攻击', count: 2345, percentage: 23.45 },
                     { type: 'XSS攻击', count: 1234, percentage: 12.34 },
                     { type: '暴力破解', count: 987, percentage: 9.87 }
-                  ]} 
+                  ]}
                 />
               </div>
-              <Button 
-                type="link" 
+              <Button
+                type="link"
                 onClick={() => setIsChartsExpanded(!isChartsExpanded)}
                 style={{ padding: '4px 0', marginLeft: '16px' }}
               >
@@ -454,6 +460,7 @@ const AttackLogs: React.FC = () => {
         <Form
           form={form}
           style={{ marginBottom: '16px' }}
+          onFinish={handleFilter}
         >
           <Row gutter={[16, 16]}>
             <Col span={6}>
@@ -565,7 +572,7 @@ const AttackLogs: React.FC = () => {
             <Col span={6} style={{ display: 'flex', alignItems: 'flex-end' }}>
               <Form.Item style={{ marginBottom: 0 }}>
                 <Space>
-                  <Button type="primary" htmlType="submit" onClick={handleFilter}>
+                  <Button type="primary" htmlType="submit">
                     筛选
                   </Button>
                   <Button onClick={handleReset}>
@@ -643,7 +650,10 @@ const AttackLogs: React.FC = () => {
             selectedRowKeys: selectedRows.map(row => row.key),
             onChange: (_, rows) => setSelectedRows(rows),
           }}
-          scroll={{ x: 2000 }}
+          scroll={{
+            x: 2000,
+            scrollToFirstRowOnChange: true
+          }}
           pagination={{
             total: filteredData.length,
             pageSize: 10,
@@ -651,6 +661,11 @@ const AttackLogs: React.FC = () => {
             showQuickJumper: true,
             showTotal: (total) => `共 ${total} 条记录`,
           }}
+          style={{
+            overflow: 'auto',
+            position: 'relative'
+          }}
+          className="custom-table"
         />
       </Card>
       <AttackLogDetail
@@ -681,6 +696,13 @@ const AttackLogs: React.FC = () => {
         open={isDetailVisible}
         onClose={() => setIsDetailVisible(false)}
       />
+      <style>
+        {`
+          .custom-table .ant-table-cell-fix-right {
+            transition: none !important;
+          }
+        `}
+      </style>
     </div>
   );
 };
