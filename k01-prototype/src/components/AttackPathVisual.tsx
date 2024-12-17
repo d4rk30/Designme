@@ -2,12 +2,6 @@ import React from 'react';
 import { Space, Typography, Button, Tag, Descriptions } from 'antd';
 import { StopOutlined } from '@ant-design/icons';
 
-
-// 导入图片
-import attackerIcon from '../assets/icons/attacker.svg';
-import deviceIcon from '../assets/icons/device.svg';
-import victimIcon from '../assets/icons/victim.svg';
-
 interface AttackPathVisualProps {
   attackerInfo: {
     ip: string;
@@ -18,7 +12,7 @@ interface AttackPathVisualProps {
     intelType: string;
     rule: string;
     intelSource: string;
-    localCalibration?: {  
+    localCalibration?: {
       status: string;
       result: string;
       time: string;
@@ -49,11 +43,17 @@ const AttackPathVisual: React.FC<AttackPathVisualProps> = ({
     return colors[level] || 'blue';
   };
 
+  const iconMapping = {
+    attacker: '/images/path-point/attack.png',
+    device: '/images/path-point/device.png',
+    victim: '/images/path-point/victim.png'
+  };
+
   return (
     <div style={{ paddingTop: '10px', position: 'relative', minHeight: '100px' }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'flex-start',
         position: 'relative'
       }}>
@@ -112,7 +112,7 @@ const AttackPathVisual: React.FC<AttackPathVisualProps> = ({
 
         {/* 攻击者信息 */}
         <div style={{ flex: 1, maxWidth: '33%', textAlign: 'center' }}>
-          <div style={{ 
+          <div style={{
             width: '64px',
             height: '64px',
             background: '#f0f2f5',
@@ -124,7 +124,7 @@ const AttackPathVisual: React.FC<AttackPathVisualProps> = ({
             position: 'relative',
             zIndex: 2
           }}>
-            <img src={attackerIcon} alt="攻击者" style={{ width: '32px', height: '32px' }} />
+            <img src={iconMapping.attacker} alt="攻击者" style={{ width: '32px', height: '32px' }} />
           </div>
           <div style={{ padding: '0 20px' }}>
             <Descriptions column={1} size="small" style={{ textAlign: 'left' }}>
@@ -139,7 +139,7 @@ const AttackPathVisual: React.FC<AttackPathVisualProps> = ({
 
         {/* 设备信息 */}
         <div style={{ flex: 1, maxWidth: '33%', textAlign: 'center' }}>
-          <div style={{ 
+          <div style={{
             width: '64px',
             height: '64px',
             background: '#f0f2f5',
@@ -151,7 +151,7 @@ const AttackPathVisual: React.FC<AttackPathVisualProps> = ({
             position: 'relative',
             zIndex: 2
           }}>
-            <img src={deviceIcon} alt="设备" style={{ width: '32px', height: '32px' }} />
+            <img src={iconMapping.device} alt="设备" style={{ width: '32px', height: '32px' }} />
           </div>
           <div style={{ padding: '0 20px' }}>
             <Descriptions column={1} size="small" style={{ textAlign: 'left' }}>
@@ -181,7 +181,7 @@ const AttackPathVisual: React.FC<AttackPathVisualProps> = ({
 
         {/* 被攻击者信息 */}
         <div style={{ flex: 1, maxWidth: '33%', textAlign: 'center' }}>
-          <div style={{ 
+          <div style={{
             width: '64px',
             height: '64px',
             background: '#f0f2f5',
@@ -193,7 +193,7 @@ const AttackPathVisual: React.FC<AttackPathVisualProps> = ({
             position: 'relative',
             zIndex: 2
           }}>
-            <img src={victimIcon} alt="被攻击者" style={{ width: '32px', height: '32px' }} />
+            <img src={iconMapping.victim} alt="被攻击者" style={{ width: '32px', height: '32px' }} />
           </div>
           <div style={{ padding: '0 20px' }}>
             <Descriptions column={1} size="small" style={{ textAlign: 'left' }}>

@@ -33,11 +33,17 @@ const ExternalConnectionPathVisual: React.FC<ExternalConnectionPathVisualProps> 
     return colors[protocol.toUpperCase()] || 'default';
   };
 
+  const iconMapping = {
+    attacker: '/images/path-point/attack.png',
+    device: '/images/path-point/device.png',
+    victim: '/images/path-point/victim.png'
+  };
+
   return (
     <div style={{ paddingTop: '10px', position: 'relative', minHeight: '100px' }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'flex-start',
         position: 'relative',
         padding: '0 20px'
@@ -69,18 +75,18 @@ const ExternalConnectionPathVisual: React.FC<ExternalConnectionPathVisualProps> 
             alignItems: 'center',
             zIndex: 3
           }}>
-            <Tag 
+            <Tag
               color={getProtocolColor(protocol)}
-              style={{ 
+              style={{
                 marginBottom: '4px',
                 marginTop: '-12px'
               }}
             >
               {protocol.toUpperCase()}
             </Tag>
-            <Typography.Text 
+            <Typography.Text
               copyable
-              style={{ 
+              style={{
                 fontSize: '12px',
                 color: '#666',
                 marginTop: '8px',
@@ -97,7 +103,7 @@ const ExternalConnectionPathVisual: React.FC<ExternalConnectionPathVisualProps> 
 
         {/* 受控主机信息 */}
         <div style={{ flex: 1, maxWidth: '45%', textAlign: 'left' }}>
-          <div style={{ 
+          <div style={{
             width: '64px',
             height: '64px',
             background: '#f0f2f5',
@@ -109,7 +115,7 @@ const ExternalConnectionPathVisual: React.FC<ExternalConnectionPathVisualProps> 
             position: 'relative',
             zIndex: 2
           }}>
-            <img src={victimIcon} alt="受控主机" style={{ width: '32px', height: '32px' }} />
+            <img src={iconMapping.victim} alt="受控主机" style={{ width: '32px', height: '32px' }} />
           </div>
           <div>
             <Space>
@@ -123,7 +129,7 @@ const ExternalConnectionPathVisual: React.FC<ExternalConnectionPathVisualProps> 
 
         {/* 目的IP信息 */}
         <div style={{ flex: 1, maxWidth: '45%', textAlign: 'right' }}>
-          <div style={{ 
+          <div style={{
             width: '64px',
             height: '64px',
             background: '#f0f2f5',
@@ -136,7 +142,7 @@ const ExternalConnectionPathVisual: React.FC<ExternalConnectionPathVisualProps> 
             position: 'relative',
             zIndex: 2
           }}>
-            <img src={attackerIcon} alt="目的IP" style={{ width: '32px', height: '32px' }} />
+            <img src={iconMapping.attacker} alt="目的IP" style={{ width: '32px', height: '32px' }} />
           </div>
           <div>
             <Space>
