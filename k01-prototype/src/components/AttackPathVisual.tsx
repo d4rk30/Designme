@@ -1,5 +1,5 @@
 import React from 'react';
-import { Space, Typography, Button, Tag, Descriptions } from 'antd';
+import { Space, Typography, Tag, Descriptions } from 'antd';
 import { StopOutlined } from '@ant-design/icons';
 
 interface AttackPathVisualProps {

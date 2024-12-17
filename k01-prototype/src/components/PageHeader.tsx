@@ -75,13 +75,13 @@ const PageHeader: React.FC<PageHeaderProps> = ({ extra }) => {
   const location = useLocation();
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>(getCurrentWeek());
-  const [lastUpdateTime, setLastUpdateTime] = useState(dayjs().format('YYYY-MM-DD HH:mm:ss'));
+  const [lastUpdateTime] = useState(dayjs().format('YYYY-MM-DD HH:mm:ss'));
 
   const breadcrumbItems = useMemo(() => {
-    const pathname = location.pathname.endsWith('/') 
-      ? location.pathname.slice(0, -1) 
+    const pathname = location.pathname.endsWith('/')
+      ? location.pathname.slice(0, -1)
       : location.pathname;
-    
+
     const paths = menuPathMap[pathname];
     if (!paths) return [{ title: '未知页面' }];
 
@@ -114,12 +114,12 @@ const PageHeader: React.FC<PageHeaderProps> = ({ extra }) => {
         <Tooltip title="开启自动刷新后每隔两分钟刷新一次数据，数据受到右侧时间筛选器的影响">
           <QuestionCircleOutlined />
         </Tooltip>
-        <Switch 
-          checked={autoRefresh} 
-          onChange={handleAutoRefreshChange} 
+        <Switch
+          checked={autoRefresh}
+          onChange={handleAutoRefreshChange}
         />
       </Space>
-      <RangePicker 
+      <RangePicker
         value={dateRange}
         onChange={handleDateRangeChange}
         defaultValue={[dayjs().startOf('week'), dayjs()]}

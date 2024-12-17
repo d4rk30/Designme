@@ -1,10 +1,6 @@
 import React from 'react';
 import { Space, Typography, Tag } from 'antd';
 
-// 导入图片
-import attackerIcon from '../assets/icons/attacker.svg';
-import victimIcon from '../assets/icons/victim.svg';
-
 interface ExternalConnectionPathVisualProps {
   attackerInfo: {
     ip: string;

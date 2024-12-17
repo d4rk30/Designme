@@ -228,6 +228,16 @@ const MainLayout = () => {
     },
   ];
 
+  const getDefaultOpenKey = (pathname: string): string => {
+    const path = pathname.substring(1);
+    const parentKey = menuItems?.find(item =>
+      item && 'children' in item && item.children?.some(child =>
+        child && child.key === path
+      )
+    )?.key;
+    return parentKey as string || '';
+  };
+
   const handleMenuClick: MenuProps['onClick'] = (e) => {
     navigate(`/${e.key}`);
   };
@@ -251,25 +261,31 @@ const MainLayout = () => {
         </div>
       </Header>
       <Layout>
-        <Sider 
-          collapsible 
-          collapsed={collapsed} 
+        <Sider
+          collapsible
+          collapsed={collapsed}
           onCollapse={handleCollapse}
-          style={{ 
+          style={{
             overflow: 'auto',
             height: '100vh',
             position: 'fixed',
             left: 0,
             top: 64,
-            bottom: 0
+            bottom: 0,
+            paddingBottom: '48px'
           }}
         >
           <Menu
             theme="dark"
-            defaultSelectedKeys={[location.pathname]}
+            selectedKeys={[location.pathname.substring(1)]}
+            defaultOpenKeys={[getDefaultOpenKey(location.pathname)]}
             mode="inline"
             items={menuItems}
             onClick={handleMenuClick}
+            style={{
+              height: 'calc(100vh - 112px)',
+              overflowY: 'auto'
+            }}
           />
         </Sider>
         <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'margin-left 0.2s' }}>
