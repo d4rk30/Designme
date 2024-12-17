@@ -36,7 +36,7 @@ export const IntelTypeChart: React.FC = () => {
     color: colors,
     tooltip: {
       trigger: 'item',
-      formatter: (params) => {
+      formatter: (params: { name: any; value: any; percent: any; }) => {
         return `${params.name}: ${params.value} 次 (${params.percent}%)`;
       }
     },

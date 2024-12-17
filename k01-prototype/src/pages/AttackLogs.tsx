@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Space, Input, Form, Select, Row, Col, Cascader, Modal, message, Drawer, List, Typography, Tag } from 'antd';
-import { StarOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
+import { StarOutlined} from '@ant-design/icons';
 import { AttackTrendChart } from '../components/AttackTrendChart';
 import { IntelTypeChart } from '../components/IntelTypeChart';
 import AttackLogDetail from '../components/AttackLogDetail';

@@ -7,6 +7,8 @@ import ExternalConnectionLogs from './pages/ExternalConnectionLogs';
 import PublicIntelligence from './pages/PublicIntelligence';
 import License from './pages/License';
 import Blacklist from './pages/Blacklist';
+import AssetManagement from './pages/AssetManagement';
+import AssetList from './pages/AssetList';
 import './App.css';
 
 function App() {
@@ -38,8 +40,9 @@ function App() {
           <Route path="ip-control" element={<div>IP访问控制</div>} />
           <Route path="blacklist" element={<Blacklist />} />
           <Route path="mapping-policy" element={<div>反测绘策略</div>} />
+          <Route path="asset-management" element={<AssetManagement />} />
+          <Route path="asset-management/:groupId" element={<AssetList />} />
           <Route path="report" element={<div>报表导出</div>} />
-          <Route path="asset-management" element={<div>防护资产管理</div>} />
           <Route path="system-allocation" element={<div>系统配属</div>} />
           <Route path="system-status" element={<div>系统状态</div>} />
           <Route path="network-config" element={<div>网络配置</div>} />
