@@ -286,6 +286,7 @@ const MainLayout = () => {
               height: 'calc(100vh - 112px)',
               overflowY: 'auto'
             }}
+            className="custom-menu-scroll"
           />
         </Sider>
         <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'margin-left 0.2s' }}>
