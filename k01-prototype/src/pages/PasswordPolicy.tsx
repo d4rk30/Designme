@@ -2,7 +2,6 @@ import { Card } from 'antd';
 import { useState } from 'react';
 import PolicyList from '../components/password-policy/PolicyList';
 import CustomPasswordList from '../components/password-policy/CustomPasswordList';
-import './PasswordPolicy.css';
 
 const tabList = [
   {

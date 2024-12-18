@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Card } from 'antd';
-import './Blacklist.css';
 import IPBlacklist from '../components/IPBlacklist';
 
 const tabList = [

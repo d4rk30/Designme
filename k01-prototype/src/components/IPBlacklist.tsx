@@ -3,7 +3,6 @@ import { Form, Row, Col, Input, Select, DatePicker, Button, Table, Space, Popcon
 import { PlusOutlined, ImportOutlined, ExportOutlined, ReloadOutlined, ClearOutlined } from '@ant-design/icons';
 import type { TableColumnsType } from 'antd';
 import locale from 'antd/es/date-picker/locale/zh_CN';
-import './IPBlacklist.css';
 
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;

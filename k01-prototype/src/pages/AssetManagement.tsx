@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Card, Table, Button, Space, Form, Input, Modal, Popconfirm, message } from 'antd';
-import { PlusOutlined, ReloadOutlined, EditOutlined, DeleteOutlined, FolderOpenOutlined } from '@ant-design/icons';
+import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { TableColumnsType } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import './AssetManagement.css';
 
 const { TextArea } = Input;
 
@@ -64,10 +63,6 @@ const AssetManagement: React.FC = () => {
   const handleDelete = (record: AssetGroup) => {
     console.log('删除资产组：', record);
     message.success('删除成功');
-  };
-
-  const handleViewAssets = (record: AssetGroup) => {
-    navigate(`/asset-management/${record.id}`);
   };
 
   const columns: TableColumnsType<AssetGroup> = [

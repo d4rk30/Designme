@@ -9,6 +9,7 @@ import License from './pages/License';
 import Blacklist from './pages/Blacklist';
 import AssetManagement from './pages/AssetManagement';
 import AssetList from './pages/AssetList';
+import ReportPage from './pages/ReportPage';
 import './App.css';
 
 function App() {
@@ -37,12 +38,12 @@ function App() {
           <Route path="attack-policy" element={<div>攻击监测策略</div>} />
           <Route path="external-policy" element={<div>外联检测策略</div>} />
           <Route path="password-policy" element={<PasswordPolicy />} />
+          <Route path="report" element={<ReportPage />} />
           <Route path="ip-control" element={<div>IP访问控制</div>} />
           <Route path="blacklist" element={<Blacklist />} />
           <Route path="mapping-policy" element={<div>反测绘策略</div>} />
           <Route path="asset-management" element={<AssetManagement />} />
           <Route path="asset-management/:groupId" element={<AssetList />} />
-          <Route path="report" element={<div>报表导出</div>} />
           <Route path="system-allocation" element={<div>系统配属</div>} />
           <Route path="system-status" element={<div>系统状态</div>} />
           <Route path="network-config" element={<div>网络配置</div>} />
