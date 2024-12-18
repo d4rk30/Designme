@@ -230,6 +230,12 @@ const MainLayout = () => {
 
   const getDefaultOpenKey = (pathname: string): string => {
     const path = pathname.substring(1);
+
+    // 处理资产列表页面的特殊情况
+    if (path.startsWith('asset-management/')) {
+      return 'system';  // 返回系统管理的 key
+    }
+
     const parentKey = menuItems?.find(item =>
       item && 'children' in item && item.children?.some(child =>
         child && child.key === path
@@ -244,6 +250,16 @@ const MainLayout = () => {
 
   const handleCollapse = (collapsed: boolean) => {
     setCollapsed(collapsed);
+  };
+
+  // 获取当前路径对应的选中菜单项
+  const getSelectedKeys = (pathname: string): string[] => {
+    const path = pathname.substring(1);
+    // 处理资产列表页面的特殊情况
+    if (path.startsWith('asset-management/')) {
+      return ['asset-management'];
+    }
+    return [path];
   };
 
   return (
@@ -277,7 +293,7 @@ const MainLayout = () => {
         >
           <Menu
             theme="dark"
-            selectedKeys={[location.pathname.substring(1)]}
+            selectedKeys={getSelectedKeys(location.pathname)}
             defaultOpenKeys={[getDefaultOpenKey(location.pathname)]}
             mode="inline"
             items={menuItems}

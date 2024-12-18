@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Card, Table, Button, Space, Form, Input, Modal, Popconfirm, message, Select, Row, Col, Typography } from 'antd';
-import { PlusOutlined, ReloadOutlined, EditOutlined, DeleteOutlined, ImportOutlined, ExportOutlined, LeftOutlined } from '@ant-design/icons';
+import { Card, Table, Button, Space, Form, Input, Modal, Popconfirm, message, Select, Typography } from 'antd';
+import { PlusOutlined, ReloadOutlined, ImportOutlined, ExportOutlined } from '@ant-design/icons';
 import type { TableColumnsType } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -13,6 +13,7 @@ interface Asset {
   groupId: string;
   type: 'ip' | 'domain';
   value: string;
+  port?: string;
   createTime: string;
   remark?: string;
 }
@@ -28,8 +29,9 @@ const AssetList: React.FC = () => {
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
 
   // 模拟数据
-  const data: Asset[] = [
+  const data: (Asset & { key: string })[] = [
     {
+      key: '1',
       id: '1',
       groupId: groupId || '',
       type: 'ip',
@@ -38,6 +40,7 @@ const AssetList: React.FC = () => {
       remark: '核心交换机网段'
     },
     {
+      key: '2',
       id: '2',
       groupId: groupId || '',
       type: 'domain',
@@ -85,6 +88,14 @@ const AssetList: React.FC = () => {
     filterForm.resetFields();
   };
 
+  // 添加常用端口配置
+  const COMMON_PORTS = '21,22,23,25,53,80,110,143,443,465,587,993,995,1080,1433,1521,3306,3389,5432,6379,8080,8443,27017';
+
+  // 在组件内添加处理函数
+  const handleCommonPorts = () => {
+    form.setFieldValue('port', COMMON_PORTS);
+  };
+
   const columns: TableColumnsType<Asset> = [
     {
       title: '资产类型',
@@ -93,7 +104,7 @@ const AssetList: React.FC = () => {
       render: (type) => type === 'ip' ? 'IP/IP段' : '域名'
     },
     {
-      title: 'IP/域名',
+      title: 'IP/IP段/域名',
       dataIndex: 'value',
       key: 'value',
     },
@@ -113,9 +124,8 @@ const AssetList: React.FC = () => {
       key: 'action',
       render: (_, record) => (
         <Space size="middle">
-          <Button 
-            type="link" 
-            icon={<EditOutlined />}
+          <Button
+            type="link"
             onClick={() => showModal(record.type, record)}
           >
             编辑
@@ -126,7 +136,7 @@ const AssetList: React.FC = () => {
             okText="确定"
             cancelText="取消"
           >
-            <Button type="link" danger icon={<DeleteOutlined />}>
+            <Button type="link" danger>
               删除
             </Button>
           </Popconfirm>
@@ -143,33 +153,74 @@ const AssetList: React.FC = () => {
   };
 
   return (
-    <Card>
+    <Card
+      title={
+        <Space split={
+          <span style={{
+            margin: '0 8px',
+            color: 'rgba(0, 0, 0, 0.45)',
+            fontWeight: 'normal',
+            opacity: 1,
+            display: 'inline-block'
+          }}>
+            |
+          </span>
+        }
+          align="center"
+        >
+          <Button
+            type="link"
+            onClick={() => navigate('/asset-management')}
+            style={{
+              padding: '4px 8px',
+              height: 'auto',
+              lineHeight: 'inherit'
+            }}
+          >
+            返回
+          </Button>
+          <Title
+            level={5}
+            style={{
+              margin: 0,
+              lineHeight: 'inherit'
+            }}
+          >
+            核心业务资产组
+          </Title>
+        </Space>
+      }
+    >
       <Space direction="vertical" style={{ width: '100%' }} size="middle">
-        <Row justify="space-between" align="middle">
-          <Col>
-            <Space>
-              <Button icon={<LeftOutlined />} onClick={() => navigate('/asset-management')}>
-                返回
-              </Button>
-              <Title level={5} style={{ margin: 0 }}>资产组：核心业务资产组</Title>
-            </Space>
-          </Col>
-        </Row>
-
         <Form
           form={filterForm}
           onFinish={handleFilter}
           layout="inline"
+          style={{ marginBottom: 16 }}
         >
-          <Form.Item name="type" label="资产类型">
-            <Select style={{ width: 120 }} placeholder="请选择类型">
+          <Form.Item name="type" label="资产类型" style={{ minWidth: 200 }}>
+            <Select
+              placeholder="请选择类型"
+              style={{ width: 200 }}
+            >
               <Option value="">全部</Option>
               <Option value="ip">IP/IP段</Option>
               <Option value="domain">域名</Option>
             </Select>
           </Form.Item>
-          <Form.Item name="value" label="IP/域名">
-            <Input placeholder="请输入IP/域名" style={{ width: 200 }} />
+          <Form.Item
+            name="ipValue"
+            label="IP/IP段"
+            style={{ minWidth: 300 }}
+          >
+            <Input placeholder="请输入IP/IP段" />
+          </Form.Item>
+          <Form.Item
+            name="domainValue"
+            label="域名"
+            style={{ minWidth: 300 }}
+          >
+            <Input placeholder="请输入域名" />
           </Form.Item>
           <Form.Item>
             <Space>
@@ -193,38 +244,42 @@ const AssetList: React.FC = () => {
           <Button icon={<ImportOutlined />}>
             导入
           </Button>
-          <Button icon={<ExportOutlined />}>
-            导出
-          </Button>
           <Button icon={<ReloadOutlined />}>
             刷新
           </Button>
-          <Popconfirm
-            title="确定要删除选中的资产吗？"
-            disabled={selectedRowKeys.length === 0}
-            onConfirm={() => {
-              console.log('批量删除：', selectedRowKeys);
-              message.success('删除成功');
-              setSelectedRowKeys([]);
-            }}
-            okText="确定"
-            cancelText="取消"
-          >
-            <Button danger disabled={selectedRowKeys.length === 0}>
-              删除
-            </Button>
-          </Popconfirm>
+          {selectedRowKeys.length > 0 && (
+            <React.Fragment key="selected-actions">
+              <Button icon={<ExportOutlined />}>
+                导出
+              </Button>
+              <Popconfirm
+                title="确定要删除选中的资产吗？"
+                onConfirm={() => {
+                  console.log('批量删除：', selectedRowKeys);
+                  message.success('删除成功');
+                  setSelectedRowKeys([]);
+                }}
+                okText="确定"
+                cancelText="取消"
+              >
+                <Button danger>
+                  删除
+                </Button>
+              </Popconfirm>
+            </React.Fragment>
+          )}
         </Space>
 
         <Table
           rowSelection={rowSelection}
           columns={columns}
           dataSource={data}
+          rowKey="id"
         />
       </Space>
 
       <Modal
-        title={editingAsset ? "编辑资产" : `添加${modalType === 'ip' ? 'IP/IP段' : '域名'}资产`}
+        title={editingAsset ? "编辑资产" : `添加${modalType === 'ip' ? 'IP/IP段' : '域名'}`}
         open={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
@@ -240,11 +295,40 @@ const AssetList: React.FC = () => {
             label={modalType === 'ip' ? 'IP/IP段' : '域名'}
             rules={[{ required: true, message: `请输入${modalType === 'ip' ? 'IP/IP段' : '域名'}` }]}
           >
-            <Input 
-              placeholder={`请输入${modalType === 'ip' ? 'IP/IP段' : '域名'}`} 
+            <Input
+              placeholder={modalType === 'ip'
+                ? '请输入IP/IP段'
+                : '支持输入：example.com 或 *.example.com'
+              }
               disabled={!!editingAsset}
             />
           </Form.Item>
+
+          {modalType === 'ip' && (
+            <Form.Item
+              name="port"
+              label="端口"
+              tooltip="支持以下格式：单个端口(80)、端口范围(1-65535)、多个端口(22,80,443)，0 表示全端口"
+            >
+              <Input.Group compact>
+                <Form.Item
+                  name="port"
+                  noStyle
+                >
+                  <Input
+                    style={{ width: 'calc(100% - 90px)' }}
+                    placeholder="例如： 80 或 80-8080 或 22,80,443 或 0代表全端口"
+                  />
+                </Form.Item>
+                <Button
+                  onClick={handleCommonPorts}
+                  style={{ width: '90px' }}
+                >
+                  常用端口
+                </Button>
+              </Input.Group>
+            </Form.Item>
+          )}
 
           <Form.Item
             name="remark"

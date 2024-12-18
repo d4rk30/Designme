@@ -52,6 +52,7 @@ const menuPathMap: Record<string, string[]> = {
   '/blacklist': ['策略配置', '黑白名单'],
   '/mapping-policy': ['策略配置', '反测绘策略'],
   '/asset-management': ['系统管理', '防护资产管理'],
+  '/asset-management/:groupId': ['系统管理', '防护资产管理', '资产列表'],
   '/system-allocation': ['系统管理', '系统配属'],
   '/system-status': ['系统管理', '系统状态'],
   '/network-config': ['系统管理', '网络配置'],
@@ -82,7 +83,15 @@ const PageHeader: React.FC<PageHeaderProps> = ({ extra }) => {
       ? location.pathname.slice(0, -1)
       : location.pathname;
 
-    const paths = menuPathMap[pathname];
+    // 处理动态路由参数
+    const paths = Object.entries(menuPathMap).find(([key]) => {
+      if (key.includes(':')) {
+        const regex = new RegExp('^' + key.replace(':groupId', '[^/]+') + '$');
+        return regex.test(pathname);
+      }
+      return key === pathname;
+    })?.[1];
+
     if (!paths) return [{ title: '未知页面' }];
 
     return paths.map((path) => ({
