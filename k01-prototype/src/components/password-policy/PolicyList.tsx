@@ -193,8 +193,8 @@ const PolicyList = () => {
       dataIndex: 'status',
       key: 'status',
       render: (status: boolean, record: PolicyData) => (
-        <Switch 
-          checked={status} 
+        <Switch
+          checked={status}
           onChange={(checked) => handleStatusChange(checked, record)}
         />
       ),
@@ -244,15 +244,15 @@ const PolicyList = () => {
       <Row justify="space-between" style={{ marginBottom: 16 }}>
         <Col>
           <Space>
-            <Button type="primary" icon={<PlusOutlined />} onClick={showModal}>
+            <Button type="primary" onClick={showModal}>
               添加
             </Button>
-            <Button icon={<ReloadOutlined />}>
+            <Button >
               刷新
             </Button>
             {selectedRowKeys.length > 0 && (
-              <Button 
-                icon={<DeleteOutlined />} 
+              <Button
+                icon={<DeleteOutlined />}
                 danger
                 onClick={handleBatchDelete}
               >
@@ -262,9 +262,9 @@ const PolicyList = () => {
           </Space>
         </Col>
       </Row>
-      <Table 
+      <Table
         rowSelection={rowSelection}
-        columns={columns} 
+        columns={columns}
         dataSource={data}
         pagination={{
           total: data.length,

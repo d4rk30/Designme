@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Space, Input, Form, Select, Row, Col, Cascader, Modal, message, Tag, Typography } from 'antd';
+import { Card, Table, Button, Space, Input, Form, Select, Row, Col, Modal, message, Tag, Typography } from 'antd';
 import { AttackTrendChart } from '../components/AttackTrendChart';
 import { IntelTypeChart } from '../components/IntelTypeChart';
 import ExternalConnectionDetail from '../components/ExternalConnectionDetail';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import moment from 'moment';
@@ -29,6 +29,40 @@ interface SavedFilter {
   createTime: string;
 }
 
+// 添加日志项的接口定义
+interface LogItem {
+  id: string;
+  time: string;
+  attackIp: string;
+  location: string;
+  sourcePort: number;
+  requestInfo: {
+    protocol: string;
+    url: string;
+    dnsName: string;
+    nextHopDns: string;
+    method: string;
+    headers: Record<string, string>;
+    body: any;
+    params: Record<string, string>;
+  };
+  responseInfo?: {
+    headers: Record<string, string>;
+    body: any;
+  } | null;
+  targetIp: string;
+  targetPort: string;
+  targetType: string;
+  hitType: string;
+  intelType: string;
+  threatLevel: string;
+  action: string;
+  localVerification: any;
+  intelSource: string;
+  rule?: string;
+  assetGroup?: string;
+}
+
 const ExternalConnectionLogs: React.FC = () => {
   // 合并状态
   const [state, setState] = useState({
@@ -38,60 +72,12 @@ const ExternalConnectionLogs: React.FC = () => {
     isModalVisible: false,
     filterName: '',
     isDetailVisible: false,
-    selectedLog: null,
+    selectedLog: null as LogItem | null,
   });
 
   const { selectedRows, filterValues, savedFilters, isModalVisible, filterName, isDetailVisible, selectedLog } = state;
 
   const [form] = Form.useForm();
-
-  // 归属地数据
-  const locationOptions = [
-    {
-      value: 'world',
-      label: '世界',
-      children: [
-        { value: 'china', label: '中国' },
-        { value: 'usa', label: '美国' },
-        { value: 'russia', label: '俄罗斯' },
-        { value: 'japan', label: '日本' },
-        { value: 'germany', label: '德国' },
-        { value: 'france', label: '法国' },
-        { value: 'uk', label: '英国' },
-        { value: 'canada', label: '加拿大' },
-        { value: 'australia', label: '澳大利亚' },
-      ]
-    },
-    {
-      value: 'china',
-      label: '中国',
-      children: [
-        { value: 'beijing', label: '北京' },
-        { value: 'shanghai', label: '上海' },
-        { value: 'guangzhou', label: '广州' },
-        { value: 'shenzhen', label: '深圳' },
-        { value: 'hangzhou', label: '杭州' },
-        { value: 'chengdu', label: '成都' },
-        { value: 'wuhan', label: '武汉' },
-        { value: 'xian', label: '西安' },
-        { value: 'nanjing', label: '南京' },
-      ]
-    },
-    {
-      value: 'foreign',
-      label: '国外',
-      children: [
-        { value: 'usa', label: '美国' },
-        { value: 'russia', label: '俄罗斯' },
-        { value: 'japan', label: '日本' },
-        { value: 'germany', label: '德国' },
-        { value: 'france', label: '法国' },
-        { value: 'uk', label: '英国' },
-        { value: 'canada', label: '加拿大' },
-        { value: 'australia', label: '澳大利亚' },
-      ]
-    }
-  ];
 
   // 筛选选项
   const filterOptions = {
@@ -221,7 +207,7 @@ const ExternalConnectionLogs: React.FC = () => {
       title: '操作',
       key: 'operation',
       width: 160,
-      fixed: 'right',
+      fixed: 'right' as const,
       render: (_: any, record: any) => (
         <Space>
           <Button
@@ -289,6 +275,7 @@ const ExternalConnectionLogs: React.FC = () => {
           .subtract(Math.floor(Math.random() * 60), 'minutes')
           .format('YYYY-MM-DD HH:mm:ss'),
         attackIp: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+        location: getRandomElement(['北京', '上海', '广州', '深圳']),
         sourcePort: getRandomPort(),
         requestInfo: {
           protocol,
@@ -315,8 +302,13 @@ const ExternalConnectionLogs: React.FC = () => {
             params: {
               key1: 'value1',
               key2: 'value2',
-              timestamp: new Date().getTime()
+              timestamp: new Date().getTime().toString()
             }
+          },
+          params: {
+            key1: 'value1',
+            key2: 'value2',
+            timestamp: new Date().getTime().toString()
           }
         },
         responseInfo: protocol === 'DNS' ? null : {
@@ -350,9 +342,10 @@ const ExternalConnectionLogs: React.FC = () => {
           }
         },
         targetIp: `10.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
-        targetPort: getRandomPort(),
+        targetPort: getRandomPort().toString(),
         targetType: getRandomElement(targetTypes),
         hitType: getRandomElement(hitTypes),
+        intelType: getRandomElement(['情报命中', '规则命中']),
         threatLevel: getRandomElement(threatLevels),
         action: getRandomElement(actions),
         intelSource: getRandomElement(intelSources),
@@ -369,7 +362,7 @@ const ExternalConnectionLogs: React.FC = () => {
   };
 
   // 在组件加载时生成模拟数据
-  const [logs, setLogs] = useState([]);
+  const [logs, setLogs] = useState<LogItem[]>([]);
   useEffect(() => {
     const mockData = generateMockData(100);
     setLogs(mockData);
@@ -550,9 +543,9 @@ const ExternalConnectionLogs: React.FC = () => {
                   allowClear
                   placeholder="请选择威胁等级"
                   options={[
-                    { value: '高', label: '高' },
-                    { value: '中', label: '中' },
-                    { value: '低', label: '低' }
+                    { value: '高危', label: '高危' },
+                    { value: '中危', label: '中危' },
+                    { value: '低危', label: '低危' }
                   ]}
                 />
               </Form.Item>
@@ -592,7 +585,7 @@ const ExternalConnectionLogs: React.FC = () => {
 
         <Modal
           title="保存筛选条件"
-          visible={isModalVisible}
+          open={isModalVisible}
           onOk={handleSaveFilter}
           onCancel={() => {
             setState({ ...state, isModalVisible: false, filterName: '' });
@@ -645,13 +638,13 @@ const ExternalConnectionLogs: React.FC = () => {
       </Card>
       <ExternalConnectionDetail
         data={selectedLog || {
+          id: '',
           time: '',
           attackIp: '',
           location: '',
           targetIp: '',
           targetPort: '',
           intelType: '',
-          threatLevel: '',
           action: '',
           intelSource: '',
           rule: '',
@@ -661,11 +654,8 @@ const ExternalConnectionLogs: React.FC = () => {
             url: '',
             dnsName: '',
             headers: {},
-            body: ''
-          },
-          responseInfo: {
-            headers: {},
-            body: ''
+            body: '',
+            params: {}
           }
         }}
         open={isDetailVisible}

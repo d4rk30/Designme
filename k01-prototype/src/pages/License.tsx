@@ -1,10 +1,9 @@
 import React from 'react';
-import { Card, Form, Input, Button, Select, DatePicker, Typography, Space, InputNumber, Tooltip } from 'antd';
+import { Card, Form, Input, Button, Select, DatePicker, Space, InputNumber, Tooltip } from 'antd';
 import type { Rule } from 'antd/es/form';
 import dayjs from 'dayjs';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 
-const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
 const provinces = ['北京市', '上海市', '广东省', '江苏省', '浙江省'];
@@ -209,7 +208,7 @@ const License: React.FC = () => {
             label="主机名"
             rules={hostNameRules}
           >
-            <Input placeholder='例如：192-168-1-1，仅可由小写字母、数字、"-"组成，最长64个字符'/>
+            <Input placeholder='例如：192-168-1-1，仅可由小写字母、数字、"-"组成，最长64个字符' />
           </Form.Item>
 
           <Form.Item>

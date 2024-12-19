@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { Modal, Form, Input, Select, TimePicker, Checkbox, Space, Row, Col } from 'antd';
-import type { FormInstance } from 'antd/es/form';
+import { Modal, Form, Input, Select, TimePicker, Checkbox, Space, } from 'antd';
 import dayjs from 'dayjs';
+import locale from 'antd/es/date-picker/locale/zh_CN';
 
 interface AddPolicyModalProps {
   visible: boolean;
@@ -177,9 +177,9 @@ const AddPolicyModal: React.FC<AddPolicyModalProps> = ({
             >
               <RangePicker
                 format="HH:mm"
-                picker="time"
                 placeholder={['开始时间', '结束时间']}
                 style={{ width: '100%' }}
+                locale={locale}
               />
             </Form.Item>
 

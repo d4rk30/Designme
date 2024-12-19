@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Input, Button, Table, Space, Popconfirm, message } from 'antd';
-import { SearchOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Drawer, Typography, Input, Button, Table, Popconfirm, message } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
 import type { TablePaginationConfig } from 'antd/es/table';
 
 interface IpFavorite {
   ip: string;
-  type: 'attack' | 'target';  // 攻击IP 或 被攻击IP
+  type: 'attack' | 'target';
   key: string;
+}
+
+interface IpFavoritesProps {
+  open: boolean;
+  onClose: () => void;
 }
 
 const { Search } = Input;
 
-const IpFavorites: React.FC = () => {
+const IpFavorites: React.FC<IpFavoritesProps> = ({ open, onClose }) => {
   const [searchText, setSearchText] = useState('');
   const [ipList, setIpList] = useState<IpFavorite[]>([]);
   const [filteredIpList, setFilteredIpList] = useState<IpFavorite[]>([]);
@@ -83,11 +88,7 @@ const IpFavorites: React.FC = () => {
           okText="确定"
           cancelText="取消"
         >
-          <Button
-            type="link"
-            danger
-            icon={<DeleteOutlined />}
-          >
+          <Button type="link" danger>
             删除
           </Button>
         </Popconfirm>
@@ -96,7 +97,17 @@ const IpFavorites: React.FC = () => {
   ];
 
   return (
-    <div>
+    <Drawer
+      title={
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography.Title level={4} style={{ margin: 0, fontSize: '18px' }}>IP收藏夹</Typography.Title>
+        </div>
+      }
+      placement="right"
+      width="clamp(600px, 30%, 100%)"
+      onClose={onClose}
+      open={open}
+    >
       <div style={{ marginBottom: '16px' }}>
         <Search
           placeholder="请输入IP地址"
@@ -117,7 +128,7 @@ const IpFavorites: React.FC = () => {
         pagination={pagination}
         onChange={(newPagination) => setPagination(newPagination)}
       />
-    </div>
+    </Drawer>
   );
 };
 

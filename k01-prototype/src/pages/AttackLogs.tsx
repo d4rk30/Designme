@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Space, Input, Form, Select, Row, Col, Cascader, Modal, message, Drawer, Typography, Tag } from 'antd';
+import { Card, Table, Button, Space, Input, Form, Select, Row, Col, Cascader, Modal, message, Typography, Tag } from 'antd';
 import { StarOutlined } from '@ant-design/icons';
 import { AttackTrendChart } from '../components/AttackTrendChart';
 import { IntelTypeChart } from '../components/IntelTypeChart';
 import AttackLogDetail from '../components/AttackLogDetail';
-import IpFavoritesDrawer from '../components/IpFavoritesDrawer';
+import IpFavorites from '../components/IpFavorites';
 import CollapsedCharts from '../components/CollapsedCharts';
 
 interface FilterValues {
@@ -681,7 +681,7 @@ const AttackLogs: React.FC = () => {
         open={isDetailVisible}
         onClose={() => setIsDetailVisible(false)}
       />
-      <IpFavoritesDrawer
+      <IpFavorites
         open={isIpDrawerVisible}
         onClose={closeIpDrawer}
       />

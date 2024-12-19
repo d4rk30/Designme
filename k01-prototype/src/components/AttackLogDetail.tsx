@@ -41,6 +41,7 @@ interface LocalVerification {
   attackType: string;
   malformedPacketLength: number;
   attackFeatures: string;
+  aiDetection: 'hit' | 'miss';
 }
 
 interface AttackLogDetailProps {
@@ -260,6 +261,9 @@ const AttackLogDetail: React.FC<AttackLogDetailProps> = ({
                 <Descriptions.Item label="攻击类型">{data.localVerification.attackType}</Descriptions.Item>
                 <Descriptions.Item label="畸形包长度">{data.localVerification.malformedPacketLength}</Descriptions.Item>
                 <Descriptions.Item label="攻击特征">{data.localVerification.attackFeatures}</Descriptions.Item>
+                <Descriptions.Item label="AI检测引擎">
+                  {data.localVerification.aiDetection === 'hit' ? '命中' : '未命中'}
+                </Descriptions.Item>
               </Descriptions>
             </Card>
           )}
