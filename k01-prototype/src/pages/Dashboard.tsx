@@ -228,7 +228,7 @@ const getGaugeOption = (value: number, type: 'cpu' | 'memory' | 'disk') => {
 };
 
 // 定义迷你折线图的配置
-const getMiniLineChartOption = (data: number[]) => ({
+const getMiniLineChartOption = (data: number[], color: string) => ({
   xAxis: {
     type: 'category',
     show: false,
@@ -244,11 +244,20 @@ const getMiniLineChartOption = (data: number[]) => ({
     smooth: true,
     lineStyle: {
       width: 2,
-      color: colorScheme.primary.main
+      color: color  // 使用传入的颜色
     },
     symbol: 'none',
     areaStyle: {
-      color: 'rgba(24, 144, 255, 0.2)'
+      color: new echarts.graphic.LinearGradient(0, 1, 0, 0, [
+        {
+          offset: 0,
+          color: 'rgba(255, 255, 255, 0)'  // 完全透明
+        },
+        {
+          offset: 1,
+          color: color.replace(')', ', 0.2)')  // 添加 20% 透明度
+        }
+      ])
     }
   }],
   grid: {
@@ -583,7 +592,7 @@ const Dashboard: React.FC = () => {
                       {data.threatOverview.attack.high}
                     </span>
                     <ReactECharts
-                      option={getMiniLineChartOption(data.threatOverview.attackTrend)}
+                      option={getMiniLineChartOption(data.threatOverview.attackTrend, colorScheme.danger.main)}
                       style={{ width: '50px', height: '30px' }}
                     />
                   </Space>
@@ -606,7 +615,7 @@ const Dashboard: React.FC = () => {
                       {data.threatOverview.attack.medium}
                     </span>
                     <ReactECharts
-                      option={getMiniLineChartOption(data.threatOverview.mediumAttackTrend)}
+                      option={getMiniLineChartOption(data.threatOverview.mediumAttackTrend, colorScheme.warning.main)}
                       style={{ width: '50px', height: '30px' }}
                     />
                   </Space>
@@ -629,7 +638,7 @@ const Dashboard: React.FC = () => {
                       {data.threatOverview.attack.low}
                     </span>
                     <ReactECharts
-                      option={getMiniLineChartOption(data.threatOverview.lowAttackTrend)}
+                      option={getMiniLineChartOption(data.threatOverview.lowAttackTrend, colorScheme.success.main)}
                       style={{ width: '50px', height: '30px' }}
                     />
                   </Space>
@@ -720,7 +729,7 @@ const Dashboard: React.FC = () => {
                       {data.threatOverview.external.high}
                     </span>
                     <ReactECharts
-                      option={getMiniLineChartOption(data.threatOverview.externalTrend)}
+                      option={getMiniLineChartOption(data.threatOverview.externalTrend, colorScheme.danger.main)}
                       style={{ width: '50px', height: '30px' }}
                     />
                   </Space>
@@ -743,7 +752,7 @@ const Dashboard: React.FC = () => {
                       {data.threatOverview.external.medium}
                     </span>
                     <ReactECharts
-                      option={getMiniLineChartOption(data.threatOverview.mediumExternalTrend)}
+                      option={getMiniLineChartOption(data.threatOverview.mediumExternalTrend, colorScheme.warning.main)}
                       style={{ width: '50px', height: '30px' }}
                     />
                   </Space>
@@ -766,7 +775,7 @@ const Dashboard: React.FC = () => {
                       {data.threatOverview.external.low}
                     </span>
                     <ReactECharts
-                      option={getMiniLineChartOption(data.threatOverview.lowExternalTrend)}
+                      option={getMiniLineChartOption(data.threatOverview.lowExternalTrend, colorScheme.success.main)}
                       style={{ width: '50px', height: '30px' }}
                     />
                   </Space>
