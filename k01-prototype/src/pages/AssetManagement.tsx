@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Card, Table, Button, Space, Form, Input, Modal, Popconfirm, message } from 'antd';
-import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { TableColumnsType } from 'antd';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,7 +15,6 @@ interface AssetGroup {
 const AssetManagement: React.FC = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingGroup, setEditingGroup] = useState<AssetGroup | null>(null);
 
@@ -114,26 +112,18 @@ const AssetManagement: React.FC = () => {
     },
   ];
 
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: (newSelectedRowKeys: React.Key[]) => {
-      setSelectedRowKeys(newSelectedRowKeys);
-    },
-  };
-
   return (
     <Card>
       <Space style={{ marginBottom: 16 }}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => showModal()}>
+        <Button
+          type="primary"
+          onClick={() => showModal()}
+        >
           创建资产组
-        </Button>
-        <Button icon={<ReloadOutlined />}>
-          刷新
         </Button>
       </Space>
 
       <Table
-        rowSelection={rowSelection}
         columns={columns}
         dataSource={data}
       />

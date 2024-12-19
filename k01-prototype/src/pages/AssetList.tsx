@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Card, Table, Button, Space, Form, Input, Modal, Popconfirm, message, Select, Typography } from 'antd';
-import { PlusOutlined, ReloadOutlined, ImportOutlined, ExportOutlined } from '@ant-design/icons';
 import type { TableColumnsType } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -36,6 +35,7 @@ const AssetList: React.FC = () => {
       groupId: groupId || '',
       type: 'ip',
       value: '192.168.1.1/24',
+      port: '80,443,8080',
       createTime: '2023-12-17 10:00:00',
       remark: '核心交换机网段'
     },
@@ -98,15 +98,15 @@ const AssetList: React.FC = () => {
 
   const columns: TableColumnsType<Asset> = [
     {
+      title: 'IP/IP段/域名',
+      dataIndex: 'value',
+      key: 'value',
+    },
+    {
       title: '资产类型',
       dataIndex: 'type',
       key: 'type',
       render: (type) => type === 'ip' ? 'IP/IP段' : '域名'
-    },
-    {
-      title: 'IP/IP段/域名',
-      dataIndex: 'value',
-      key: 'value',
     },
     {
       title: '创建时间',
@@ -198,16 +198,6 @@ const AssetList: React.FC = () => {
           layout="inline"
           style={{ marginBottom: 16 }}
         >
-          <Form.Item name="type" label="资产类型" style={{ minWidth: 200 }}>
-            <Select
-              placeholder="请选择类型"
-              style={{ width: 200 }}
-            >
-              <Option value="">全部</Option>
-              <Option value="ip">IP/IP段</Option>
-              <Option value="domain">域名</Option>
-            </Select>
-          </Form.Item>
           <Form.Item
             name="ipValue"
             label="IP/IP段"
@@ -222,6 +212,16 @@ const AssetList: React.FC = () => {
           >
             <Input placeholder="请输入域名" />
           </Form.Item>
+          <Form.Item name="type" label="资产类型" style={{ minWidth: 200 }}>
+            <Select
+              placeholder="请选择类型"
+              style={{ width: 200 }}
+            >
+              <Option value="">全部</Option>
+              <Option value="ip">IP/IP段</Option>
+              <Option value="domain">域名</Option>
+            </Select>
+          </Form.Item>
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
@@ -235,21 +235,18 @@ const AssetList: React.FC = () => {
         </Form>
 
         <Space>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => showModal('ip')}>
+          <Button type="primary" onClick={() => showModal('ip')}>
             添加IP/IP段
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => showModal('domain')}>
+          <Button type="primary" onClick={() => showModal('domain')}>
             添加域名
           </Button>
-          <Button icon={<ImportOutlined />}>
+          <Button>
             导入
-          </Button>
-          <Button icon={<ReloadOutlined />}>
-            刷新
           </Button>
           {selectedRowKeys.length > 0 && (
             <React.Fragment key="selected-actions">
-              <Button icon={<ExportOutlined />}>
+              <Button>
                 导出
               </Button>
               <Popconfirm
@@ -263,7 +260,7 @@ const AssetList: React.FC = () => {
                 cancelText="取消"
               >
                 <Button danger>
-                  删除
+                  批量删除
                 </Button>
               </Popconfirm>
             </React.Fragment>
@@ -297,8 +294,8 @@ const AssetList: React.FC = () => {
           >
             <Input
               placeholder={modalType === 'ip'
-                ? '请输入IP/IP段'
-                : '支持输入：example.com 或 *.example.com'
+                ? '192.168.1.1 或 192.168.1.0/24 或 192.168.1.1-192.168.1.255'
+                : 'example.com 或 www.example.com 或 *.example.com'
               }
               disabled={!!editingAsset}
             />
@@ -308,7 +305,6 @@ const AssetList: React.FC = () => {
             <Form.Item
               name="port"
               label="端口"
-              tooltip="支持以下格式：单个端口(80)、端口范围(1-65535)、多个端口(22,80,443)，0 表示全端口"
             >
               <Input.Group compact>
                 <Form.Item
@@ -317,12 +313,14 @@ const AssetList: React.FC = () => {
                 >
                   <Input
                     style={{ width: 'calc(100% - 90px)' }}
-                    placeholder="例如： 80 或 80-8080 或 22,80,443 或 0代表全端口"
+                    placeholder="80 或 80-8080 或 22,80,443 或 0代表全端口"
+                    disabled={!!editingAsset}
                   />
                 </Form.Item>
                 <Button
                   onClick={handleCommonPorts}
                   style={{ width: '90px' }}
+                  disabled={!!editingAsset}
                 >
                   常用端口
                 </Button>
