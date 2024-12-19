@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Card, Table, Button, Space, Progress, message, Popconfirm, Row, Col, Switch, Form, Select, DatePicker, Modal, Input, Radio, TimePicker, InputNumber } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
 import type { TableColumnsType } from 'antd';
 import dayjs from 'dayjs';
 import locale from 'antd/es/date-picker/locale/zh_CN';
+import zhCN from 'antd/locale/zh_CN';
 
 interface ReportRecord {
   key: string;
@@ -31,7 +31,7 @@ interface ReportConfig {
   name: string;
   cycle: CycleConfig;
   modules: string[];
-  format: 'excel' | 'pdf' | 'word';
+  format: 'html' | 'pdf';
   enabled: boolean;
 }
 
@@ -88,15 +88,22 @@ const mockConfigs: ReportConfig[] = [
   {
     key: '1',
     name: '攻击监测日报配置',
-    cycle: { type: 'daily' },
+    cycle: {
+      type: 'daily',
+      time: '08:00'
+    },
     modules: ['攻击监测告警'],
-    format: 'excel',
+    format: 'pdf',
     enabled: true,
   },
   {
     key: '2',
     name: '外联检测周报配置',
-    cycle: { type: 'weekly' },
+    cycle: {
+      type: 'weekly',
+      dayOfWeek: 1,
+      time: '09:00'
+    },
     modules: ['外联检测告警'],
     format: 'pdf',
     enabled: true,
@@ -104,9 +111,13 @@ const mockConfigs: ReportConfig[] = [
   {
     key: '3',
     name: '威胁情报月度分析配置',
-    cycle: { type: 'monthly' },
+    cycle: {
+      type: 'monthly',
+      dayOfMonth: 1,
+      time: '10:00'
+    },
     modules: ['威胁情报'],
-    format: 'word',
+    format: 'html',
     enabled: false,
   },
 ];
@@ -125,7 +136,8 @@ const tabList = [
 const { RangePicker } = DatePicker;
 
 interface FilterValues {
-  module?: string;
+  name?: string;
+  module?: string[];
   exportType?: 'manual' | 'auto';
   format?: 'html' | 'pdf';
   dateRange?: [dayjs.Dayjs, dayjs.Dayjs];
@@ -153,21 +165,33 @@ const generatePreviewName = (name: string, cycle: CycleConfig) => {
         return `${now.startOf('month').format('YYYYMMDD')}-${now.endOf('month').format('YYYYMMDD')}`;
       case 'yearly':
         return `${now.startOf('year').format('YYYYMMDD')}-${now.endOf('year').format('YYYYMMDD')}`;
+      case 'custom':
+        return '自定义时间';
       default:
         return '';
     }
   };
 
   const cycleText = {
-    daily: '每日',
-    weekly: '每周',
-    monthly: '每月',
-    yearly: '每年',
-    custom: '自定义'
+    daily: '每日-',
+    weekly: '每周-',
+    monthly: '每月-',
+    yearly: '每年-',
+    custom: '自定义-'
   }[cycle.type];
 
   return `${name}-${cycleText}${getTimeRange()}`;
 };
+
+// 在文件顶部，其他 interface 定义之前添加
+const timeRangePresets: {
+  label: string;
+  value: [dayjs.Dayjs, dayjs.Dayjs];
+}[] = [
+    { label: '今日', value: [dayjs().startOf('day'), dayjs().endOf('day')] },
+    { label: '本周', value: [dayjs().startOf('week'), dayjs().endOf('week')] },
+    { label: '当月', value: [dayjs().startOf('month'), dayjs().endOf('month')] },
+  ];
 
 const ReportPage: React.FC = () => {
   const [form] = Form.useForm();
@@ -232,14 +256,15 @@ const ReportPage: React.FC = () => {
 
   const handleFilter = (values: FilterValues) => {
     const filtered = data.filter(item => {
-      const matchModule = !values.module || item.module === values.module;
+      const matchName = !values.name || item.name.toLowerCase().includes(values.name.toLowerCase());
+      const matchModule = !values.module || values.module.length === 0 || values.module.includes(item.module);
       const matchExportType = !values.exportType || item.exportType === values.exportType;
       const matchFormat = !values.format || item.format === values.format;
       const matchDate = !values.dateRange || (
         dayjs(item.createTime).isAfter(values.dateRange[0].startOf('day')) &&
         dayjs(item.createTime).isBefore(values.dateRange[1].endOf('day'))
       );
-      return matchModule && matchExportType && matchFormat && matchDate;
+      return matchName && matchModule && matchExportType && matchFormat && matchDate;
     });
     setFilteredData(filtered);
   };
@@ -251,7 +276,7 @@ const ReportPage: React.FC = () => {
 
   const handleExport = (values: ExportFormValues) => {
     console.log('导出参数：', values);
-    message.success('开始导出报表');
+    message.success('开始生成报表');
     setIsExportModalVisible(false);
     exportForm.resetFields();
   };
@@ -262,15 +287,23 @@ const ReportPage: React.FC = () => {
   };
 
   const handleConfigSubmit = (values: any) => {
+    // 转换时间格式
+    const submitValues = {
+      ...values,
+      cycle: {
+        ...values.cycle,
+        time: values.cycle.time ? values.cycle.time.format('HH:mm') : undefined,
+        startDate: values.cycle.startDate ? values.cycle.startDate.format('YYYY-MM-DD HH:mm') : undefined,
+      }
+    };
+
     if (editingConfig) {
-      // 编辑模式
       setConfigs(configs.map(config =>
-        config.key === editingConfig.key ? { ...values, key: editingConfig.key } : config
+        config.key === editingConfig.key ? { ...submitValues, key: editingConfig.key } : config
       ));
       message.success('编辑成功');
     } else {
-      // 新增模式
-      setConfigs([...configs, { ...values, key: Date.now().toString() }]);
+      setConfigs([...configs, { ...submitValues, key: Date.now().toString() }]);
       message.success('新增成功');
     }
     setIsConfigModalVisible(false);
@@ -287,15 +320,36 @@ const ReportPage: React.FC = () => {
   const showConfigModal = (config?: ReportConfig) => {
     if (config) {
       setEditingConfig(config);
-      configForm.setFieldsValue(config);
+      // 转换时间字符串为 dayjs 对象
+      const formValues = {
+        ...config,
+        cycle: {
+          ...config.cycle,
+          time: config.cycle.time ? dayjs(config.cycle.time, 'HH:mm') : undefined,
+          startDate: config.cycle.startDate ? dayjs(config.cycle.startDate) : undefined,
+        }
+      };
+      configForm.setFieldsValue(formValues);
+      setCycleType(config.cycle.type);
+    } else {
+      configForm.resetFields();
     }
     setIsConfigModalVisible(true);
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
-    const cycle = configForm.getFieldValue('cycle') || { type: cycleType };
-    setPreviewName(generatePreviewName(name, cycle));
+    const cycle = configForm.getFieldValue('cycle') || {};
+
+    // 只有当有名称和周期类型时才生成预览名称
+    if (name && cycle.type) {
+      setPreviewName(generatePreviewName(name, cycle));
+    } else if (name) {
+      // 如果只有名称，没有周期类型，只显示名称
+      setPreviewName(name);
+    } else {
+      setPreviewName('');
+    }
   };
 
   const handleCycleTypeChange = (type: CycleConfig['type']) => {
@@ -332,7 +386,7 @@ const ReportPage: React.FC = () => {
       render: (format: string) => format.toUpperCase(),
     },
     {
-      title: '报表创建时间',
+      title: '创建时间',
       dataIndex: 'createTime',
       key: 'createTime',
       width: 180,
@@ -433,6 +487,12 @@ const ReportPage: React.FC = () => {
     },
   ];
 
+  const handleBatchConfigDelete = () => {
+    setConfigs(configs.filter(config => !selectedConfigKeys.includes(config.key)));
+    setSelectedConfigKeys([]);
+    message.success('批量删除成功');
+  };
+
   const contentList = {
     records: (
       <>
@@ -441,10 +501,20 @@ const ReportPage: React.FC = () => {
           onFinish={handleFilter}
           style={{ marginBottom: '16px' }}
         >
-          <Row gutter={16}>
-            <Col flex="1">
+          <Row gutter={16} style={{ marginBottom: '16px' }}>
+            <Col flex="25%">
+              <Form.Item name="name" label="报表名称" style={{ marginBottom: 0 }}>
+                <Input placeholder="请输入报表名称" />
+              </Form.Item>
+            </Col>
+            <Col flex="25%">
               <Form.Item name="module" label="告警模块" style={{ marginBottom: 0 }}>
-                <Select allowClear placeholder="请选择告警模块">
+                <Select
+                  mode="multiple"
+                  allowClear
+                  placeholder="请选择告警模块"
+                  style={{ width: '100%' }}
+                >
                   <Select.Option value="攻击监测告警">攻击监测告警</Select.Option>
                   <Select.Option value="外联检测告警">外联检测告警</Select.Option>
                   <Select.Option value="威胁情报">威胁情报</Select.Option>
@@ -452,32 +522,38 @@ const ReportPage: React.FC = () => {
                 </Select>
               </Form.Item>
             </Col>
-            <Col flex="1">
+            <Col flex="25%">
               <Form.Item name="exportType" label="导出方式" style={{ marginBottom: 0 }}>
-                <Select allowClear placeholder="请选择导出方式">
+                <Select allowClear placeholder="请选择导出方式" style={{ width: '100%' }}>
                   <Select.Option value="manual">手动</Select.Option>
                   <Select.Option value="auto">自动</Select.Option>
                 </Select>
               </Form.Item>
             </Col>
-            <Col flex="1">
+            <Col flex="25%">
               <Form.Item name="format" label="报表格式" style={{ marginBottom: 0 }}>
-                <Select allowClear placeholder="请选择报表格式">
+                <Select allowClear placeholder="请选择报表格式" style={{ width: '100%' }}>
                   <Select.Option value="html">HTML</Select.Option>
                   <Select.Option value="pdf">PDF</Select.Option>
                 </Select>
               </Form.Item>
             </Col>
-            <Col flex="1">
+          </Row>
+          <Row gutter={16}>
+            <Col flex="25%">
               <Form.Item name="dateRange" label="创建时间" style={{ marginBottom: 0 }}>
                 <RangePicker
                   style={{ width: '100%' }}
+                  showTime
+                  format="YYYY-MM-DD HH:mm:ss"
+                  presets={timeRangePresets}
+                  placeholder={['开始时间', '结束时间']}
                   locale={locale}
                 />
               </Form.Item>
             </Col>
-            <Col flex="none">
-              <Form.Item style={{ marginBottom: 0 }}>
+            <Col flex="75%">
+              <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
                 <Space>
                   <Button type="primary" htmlType="submit">筛选</Button>
                   <Button onClick={handleReset}>重置</Button>
@@ -496,7 +572,6 @@ const ReportPage: React.FC = () => {
                 手动导出
               </Button>
               <Button
-                icon={<ReloadOutlined />}
                 onClick={handleRefresh}
               >
                 刷新
@@ -504,7 +579,6 @@ const ReportPage: React.FC = () => {
               {selectedRowKeys.length > 0 && (
                 <>
                   <Button
-                    type="primary"
                     onClick={handleBatchDownload}
                     disabled={!selectedRows.some(record => record.progress === 100)}
                   >
@@ -545,10 +619,22 @@ const ReportPage: React.FC = () => {
     config: (
       <>
         <Row style={{ marginBottom: 16 }}>
-          <Col>
-            <Button type="primary" onClick={() => showConfigModal()}>
-              新增配置
-            </Button>
+          <Col flex="auto">
+            <Space>
+              <Button type="primary" onClick={() => showConfigModal()}>
+                新增配置
+              </Button>
+              {selectedConfigKeys.length > 0 && (
+                <Popconfirm
+                  title="确定要删除选中的配置吗？"
+                  onConfirm={handleBatchConfigDelete}
+                  okText="确定"
+                  cancelText="取消"
+                >
+                  <Button danger>批量删除</Button>
+                </Popconfirm>
+              )}
+            </Space>
           </Col>
         </Row>
         <Table
@@ -575,16 +661,6 @@ const ReportPage: React.FC = () => {
     setActiveTabKey(key);
   };
 
-  // 快捷时间范围选项
-  const rangePresets: {
-    label: string;
-    value: [dayjs.Dayjs, dayjs.Dayjs];
-  }[] = [
-      { label: '今天', value: [dayjs().startOf('day'), dayjs().endOf('day')] },
-      { label: '本周', value: [dayjs().startOf('week'), dayjs().endOf('week')] },
-      { label: '当月', value: [dayjs().startOf('month'), dayjs().endOf('month')] },
-    ];
-
   return (
     <div>
       <Card
@@ -598,7 +674,7 @@ const ReportPage: React.FC = () => {
         {contentList[activeTabKey as keyof typeof contentList]}
       </Card>
       <Modal
-        title="手动导出报表"
+        title="手动导出"
         open={isExportModalVisible}
         onCancel={handleExportCancel}
         footer={null}
@@ -614,13 +690,7 @@ const ReportPage: React.FC = () => {
             label="报表名称"
             rules={[{ required: true, message: '请输入报表名称' }]}
           >
-            <RangePicker
-              style={{ width: '100%' }}
-              locale={locale}
-              showTime
-              format="YYYY-MM-DD HH:mm:ss"
-              presets={rangePresets}
-            />
+            <Input placeholder="请输入报表名称" />
           </Form.Item>
 
           <Form.Item
@@ -630,10 +700,11 @@ const ReportPage: React.FC = () => {
           >
             <RangePicker
               style={{ width: '100%' }}
-              locale={locale}
               showTime
               format="YYYY-MM-DD HH:mm:ss"
-              presets={rangePresets}
+              presets={timeRangePresets}
+              placeholder={['开始时间', '结束时间']}
+              locale={locale}
             />
           </Form.Item>
 
@@ -677,7 +748,7 @@ const ReportPage: React.FC = () => {
         </Form>
       </Modal>
       <Modal
-        title={editingConfig ? "编辑自动导出配置" : "新增自动导出配置"}
+        title={editingConfig ? "编辑配置" : "新增配置"}
         open={isConfigModalVisible}
         onCancel={handleConfigCancel}
         footer={null}
@@ -708,7 +779,7 @@ const ReportPage: React.FC = () => {
                   color: '#666',
                   fontSize: '14px'
                 }}>
-                  {previewName}.{configForm.getFieldValue('format')}
+                  预览名称：{previewName}{configForm.getFieldValue(['cycle', 'type']) ? `.${configForm.getFieldValue('format')}` : ''}
                 </div>
               )}
             </Col>
@@ -741,6 +812,8 @@ const ReportPage: React.FC = () => {
                 format="HH:mm"
                 placeholder="请选择时间"
                 style={{ width: '100%' }}
+                locale={locale}
+                showNow={false}
               />
             </Form.Item>
           )}
@@ -772,6 +845,8 @@ const ReportPage: React.FC = () => {
                     format="HH:mm"
                     placeholder="请选择时间"
                     style={{ width: '100%' }}
+                    locale={locale}
+                    showNow={false}
                   />
                 </Form.Item>
               </Col>
@@ -805,6 +880,8 @@ const ReportPage: React.FC = () => {
                     format="HH:mm"
                     placeholder="请选择时间"
                     style={{ width: '100%' }}
+                    locale={locale}
+                    showNow={false}
                   />
                 </Form.Item>
               </Col>
@@ -853,6 +930,8 @@ const ReportPage: React.FC = () => {
                     format="HH:mm"
                     placeholder="请选择时间"
                     style={{ width: '100%' }}
+                    locale={locale}
+                    showNow={false}
                   />
                 </Form.Item>
               </Col>
@@ -871,6 +950,8 @@ const ReportPage: React.FC = () => {
                   format="YYYY-MM-DD HH:mm"
                   style={{ width: '100%' }}
                   placeholder="请选择起始时间"
+                  locale={zhCN.DatePicker}
+                  showNow={false}
                 />
               </Form.Item>
               <Row gutter={16}>

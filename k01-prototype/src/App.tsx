@@ -11,6 +11,11 @@ import AssetManagement from './pages/AssetManagement';
 import AssetList from './pages/AssetList';
 import ReportPage from './pages/ReportPage';
 import './App.css';
+import dayjs from 'dayjs';
+import 'dayjs/locale/zh-cn';
+
+// 设置 dayjs 的默认语言为中文
+dayjs.locale('zh-cn');
 
 function App() {
   return (

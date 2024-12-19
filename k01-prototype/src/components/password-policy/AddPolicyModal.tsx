@@ -175,14 +175,14 @@ const AddPolicyModal: React.FC<AddPolicyModalProps> = ({
               rules={[{ required: true, message: '请选择生效时间段' }]}
               style={{ marginBottom: 0 }}
             >
-              <RangePicker 
+              <RangePicker
                 format="HH:mm"
                 picker="time"
                 placeholder={['开始时间', '结束时间']}
                 style={{ width: '100%' }}
               />
             </Form.Item>
-            
+
             <Form.Item
               name="weekDays"
               rules={[{ required: true, message: '请选择生效日期' }]}
