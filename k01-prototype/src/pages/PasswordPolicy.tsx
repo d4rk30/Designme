@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Table, Button, Space, Switch, Row, Col, message, Modal, Form, Input, Select, TimePicker, Checkbox } from 'antd';
+import { Card, Table, Button, Space, Switch, Row, Col, message, Modal, Form, Input, Select, TimePicker, Checkbox, Popconfirm } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import locale from 'antd/es/date-picker/locale/zh_CN';
 import dayjs from 'dayjs';
@@ -292,6 +292,22 @@ const PasswordPolicy: React.FC = () => {
     },
   ];
 
+  const handleBatchDelete = () => {
+    Modal.confirm({
+      title: '确认删除',
+      icon: <ExclamationCircleOutlined />,
+      content: `确定要删除选中的 ${selectedRowKeys.length} 条策略吗？`,
+      okText: '确定',
+      cancelText: '取消',
+      onOk() {
+        const newData = policyData.filter(item => !selectedRowKeys.includes(item.key));
+        setPolicyData(newData);
+        setSelectedRowKeys([]);
+        message.success('批量删除成功');
+      },
+    });
+  };
+
   const contentList: Record<string, React.ReactNode> = {
     policy: (
       <div>
@@ -302,7 +318,7 @@ const PasswordPolicy: React.FC = () => {
                 添加
               </Button>
               {selectedRowKeys.length > 0 && (
-                <Button danger>
+                <Button danger onClick={handleBatchDelete}>
                   批量删除
                 </Button>
               )}
