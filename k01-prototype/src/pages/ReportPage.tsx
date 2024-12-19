@@ -610,6 +610,7 @@ const ReportPage: React.FC = () => {
           pagination={{
             total: filteredData.length,
             pageSize: 10,
+            showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total) => `共 ${total} 条记录`,
           }}
@@ -622,7 +623,7 @@ const ReportPage: React.FC = () => {
           <Col flex="auto">
             <Space>
               <Button type="primary" onClick={() => showConfigModal()}>
-                新增配置
+                添加
               </Button>
               {selectedConfigKeys.length > 0 && (
                 <Popconfirm
@@ -649,6 +650,7 @@ const ReportPage: React.FC = () => {
           pagination={{
             total: configs.length,
             pageSize: 10,
+            showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total) => `共 ${total} 条记录`,
           }}

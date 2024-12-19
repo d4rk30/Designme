@@ -272,6 +272,13 @@ const AssetList: React.FC = () => {
           columns={columns}
           dataSource={data}
           rowKey="id"
+          pagination={{
+            total: data.length,
+            pageSize: 10,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total) => `共 ${total} 条记录`,
+          }}
         />
       </Space>
 
