@@ -1,6 +1,6 @@
 import { Breadcrumb, Switch, DatePicker, Space, Tooltip } from 'antd';
 import { useLocation } from 'react-router-dom';
-import { QuestionCircleOutlined } from '@ant-design/icons';
+import { QuestionCircleOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 
@@ -115,6 +115,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ extra }) => {
 
   const ifNeedAutoRefresh = location.pathname === '/attack-logs' || location.pathname === '/external-logs';
   const isPublicIntelligence = location.pathname === '/public-intelligence';
+  const isDashboard = location.pathname === '/dashboard';
 
   const extraContent = ifNeedAutoRefresh ? (
     <Space size={24}>
@@ -138,6 +139,16 @@ const PageHeader: React.FC<PageHeaderProps> = ({ extra }) => {
     <Space>
       <span>更新时间：</span>
       <span>{lastUpdateTime}</span>
+    </Space>
+  ) : isDashboard ? (
+    <Space>
+      <span style={{ color: '#00000073', fontSize: '14px' }}>
+        最近更新时间：{dayjs().format('YYYY-MM-DD HH:mm:ss')}
+      </span>
+      <ReloadOutlined
+        style={{ cursor: 'pointer', color: '#00000073' }}
+        onClick={() => window.location.reload()}
+      />
     </Space>
   ) : extra;
 
