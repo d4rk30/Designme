@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Tag, Space } from 'antd';
-import { ThunderboltOutlined, GlobalOutlined } from '@ant-design/icons';
+import { Card, Row, Col, Tag, Space } from 'antd';
 import ReactECharts from 'echarts-for-react';
 import * as echarts from 'echarts';
 
@@ -10,15 +9,17 @@ const generateMockData = () => ({
   threatOverview: {
     // 攻击监测告警数据
     attack: {
-      high: Math.floor(Math.random() * 100), // 高危 0-100
-      medium: Math.floor(Math.random() * 150), // 中危 0-150
-      low: Math.floor(Math.random() * 200), // 低危 0-200
+      high: Math.floor(Math.random() * 100),    // 0-99
+      medium: Math.floor(Math.random() * 100),  // 0-99
+      low: Math.floor(Math.random() * 100),     // 0-99
+      mapping: Math.floor(Math.random() * 100), // 0-99
     },
     // 外联检测告警数据
     external: {
-      high: Math.floor(Math.random() * 50), // 高危 0-50
-      medium: Math.floor(Math.random() * 80), // 中危 0-80
-      low: Math.floor(Math.random() * 100), // 低危 0-100
+      high: Math.floor(Math.random() * 100),    // 0-99
+      medium: Math.floor(Math.random() * 100),  // 0-99
+      low: Math.floor(Math.random() * 100),     // 0-99
+      foreign: Math.floor(Math.random() * 100), // 0-99
     },
     attackTrend: Array(7).fill(0).map(() => Math.floor(Math.random() * 100)), // 新增攻击趋势
     mediumAttackTrend: Array(7).fill(0).map(() => Math.floor(Math.random() * 100)), // 新增中危攻击趋势
@@ -31,7 +32,10 @@ const generateMockData = () => ({
       high: Math.floor(Math.random() * 100),
       medium: Math.floor(Math.random() * 200),
       low: Math.floor(Math.random() * 300),
-    }
+    },
+    foreignExternalTrend: Array(7).fill(0).map(() => Math.floor(Math.random() * 100)), // 新增境外流量趋势数据
+    mappingTrend: Array(7).fill(0).map(() => Math.floor(Math.random() * 100)), // 新增反测绘趋势
+    foreignTrend: Array(7).fill(0).map(() => Math.floor(Math.random() * 100)), // 新增境外流量总体趋势
   },
   assetStatus: {
     total: Math.floor(Math.random() * 500),
@@ -128,12 +132,6 @@ const colorScheme = {
     border: '#ffa39e'
   }
 };
-
-// 修改图表配色
-const getChartColors = () => ({
-  series: [colorScheme.primary.main, colorScheme.success.main, colorScheme.warning.main, colorScheme.danger.main],
-  background: [colorScheme.primary.light, colorScheme.success.light, colorScheme.warning.light, colorScheme.danger.light]
-});
 
 // 修改仪表盘配置
 const getGaugeOption = (value: number, type: 'cpu' | 'memory' | 'disk') => {
@@ -294,7 +292,7 @@ const Dashboard: React.FC = () => {
       }
     },
     legend: {
-      data: ['攻击监测', '外联检测'],
+      data: ['攻击监测', '外联检测', '反测绘', '出境流量'],
       right: '5%',
       top: 10,
       textStyle: {
@@ -354,11 +352,11 @@ const Dashboard: React.FC = () => {
         symbol: 'circle',
         symbolSize: 8,
         lineStyle: {
-          width: 3,
-          color: '#1890ff'
+          width: 2,
+          color: '#ff4d4f'
         },
         itemStyle: {
-          color: '#1890ff',
+          color: '#ff4d4f',
           borderWidth: 2,
           borderColor: '#fff'
         },
@@ -371,10 +369,10 @@ const Dashboard: React.FC = () => {
             y2: 1,
             colorStops: [{
               offset: 0,
-              color: 'rgba(24, 144, 255, 0.25)'
+              color: 'rgba(255, 77, 79, 0.25)'
             }, {
               offset: 1,
-              color: 'rgba(24, 144, 255, 0.05)'
+              color: 'rgba(255, 77, 79, 0.05)'
             }]
           }
         },
@@ -387,11 +385,11 @@ const Dashboard: React.FC = () => {
         symbol: 'circle',
         symbolSize: 8,
         lineStyle: {
-          width: 3,
-          color: '#69c0ff'
+          width: 2,
+          color: '#ffa940'
         },
         itemStyle: {
-          color: '#69c0ff',
+          color: '#ffa940',
           borderWidth: 2,
           borderColor: '#fff'
         },
@@ -404,14 +402,80 @@ const Dashboard: React.FC = () => {
             y2: 1,
             colorStops: [{
               offset: 0,
-              color: 'rgba(105, 192, 255, 0.25)'
+              color: 'rgba(255, 169, 64, 0.25)'
             }, {
               offset: 1,
-              color: 'rgba(105, 192, 255, 0.05)'
+              color: 'rgba(255, 169, 64, 0.05)'
             }]
           }
         },
         data: data.threatOverview.externalTrend
+      },
+      {
+        name: '反测绘',
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 8,
+        lineStyle: {
+          width: 2,
+          color: '#40a9ff'
+        },
+        itemStyle: {
+          color: '#40a9ff',
+          borderWidth: 2,
+          borderColor: '#fff'
+        },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{
+              offset: 0,
+              color: 'rgba(64, 169, 255, 0.25)'
+            }, {
+              offset: 1,
+              color: 'rgba(64, 169, 255, 0.05)'
+            }]
+          }
+        },
+        data: data.threatOverview.mappingTrend
+      },
+      {
+        name: '出境流量',
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 8,
+        lineStyle: {
+          width: 2,
+          color: '#722ed1'
+        },
+        itemStyle: {
+          color: '#722ed1',
+          borderWidth: 2,
+          borderColor: '#fff'
+        },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{
+              offset: 0,
+              color: 'rgba(114, 46, 209, 0.25)'
+            }, {
+              offset: 1,
+              color: 'rgba(114, 46, 209, 0.05)'
+            }]
+          }
+        },
+        data: data.threatOverview.foreignTrend
       }
     ]
   };
@@ -553,27 +617,14 @@ const Dashboard: React.FC = () => {
               </Col>
             </Row>
 
-            <Row align="middle" justify="space-between">
-              {/* 左侧总数 */}
-              <Col>
-                <Space align="center" size={8}>
-                  <ThunderboltOutlined style={{
-                    color: colorScheme.primary.main,
-                    fontSize: '30px'
-                  }} />
-                  <span style={{
-                    fontSize: '30px',
-                    fontWeight: 600,
-                    color: '#000000d9',
-                  }}>
-                    {data.threatOverview.attack.high + data.threatOverview.attack.medium + data.threatOverview.attack.low}
-                  </span>
-                </Space>
-              </Col>
-
-              {/* 右侧统计 */}
-              <Col>
-                <Space split={<div style={{ width: '1px', height: '40px', background: '#f0f0f0', margin: '0 24px' }} />}>
+            <Row align="middle">
+              <Col span={24}>
+                <Space split={<div style={{
+                  width: '1px',
+                  height: '40px',
+                  background: '#f0f0f0',
+                  margin: '0 16px'
+                }} />}>
                   {/* 高危 */}
                   <Space align="center" size={8}>
                     <Tag style={{
@@ -642,6 +693,29 @@ const Dashboard: React.FC = () => {
                       style={{ width: '50px', height: '30px' }}
                     />
                   </Space>
+
+                  {/* 新增反测绘统计 */}
+                  <Space align="center" size={8}>
+                    <Tag style={{
+                      color: '#40a9ff',
+                      backgroundColor: 'rgba(64, 169, 255, 0.1)',
+                      border: 'none',
+                      padding: '4px 8px'
+                    }}>
+                      反测绘
+                    </Tag>
+                    <span style={{
+                      fontSize: '28px',
+                      fontWeight: 600,
+                      color: '#40a9ff'
+                    }}>
+                      {data.threatOverview.attack.mapping}
+                    </span>
+                    <ReactECharts
+                      option={getMiniLineChartOption(data.threatOverview.mappingTrend, '#40a9ff')}
+                      style={{ width: '50px', height: '30px' }}
+                    />
+                  </Space>
                 </Space>
               </Col>
             </Row>
@@ -690,27 +764,14 @@ const Dashboard: React.FC = () => {
             </Row>
 
             {/* 数据展示行 */}
-            <Row align="middle" justify="space-between">
-              {/* 左侧总数 */}
-              <Col>
-                <Space align="center" size={8}>
-                  <GlobalOutlined style={{
-                    color: colorScheme.primary.main,
-                    fontSize: '30px'
-                  }} />
-                  <span style={{
-                    fontSize: '30px',
-                    fontWeight: 600,
-                    color: '#000000d9',
-                  }}>
-                    {data.threatOverview.external.high + data.threatOverview.external.medium + data.threatOverview.external.low}
-                  </span>
-                </Space>
-              </Col>
-
-              {/* 右侧统计 */}
-              <Col>
-                <Space split={<div style={{ width: '1px', height: '40px', background: '#f0f0f0', margin: '0 24px' }} />}>
+            <Row align="middle">
+              <Col span={24}>
+                <Space split={<div style={{
+                  width: '1px',
+                  height: '40px',
+                  background: '#f0f0f0',
+                  margin: '0 16px' // 将分隔线的左右边距从 24px 减小到 16px
+                }} />}>
                   {/* 高危 */}
                   <Space align="center" size={8}>
                     <Tag style={{
@@ -776,6 +837,29 @@ const Dashboard: React.FC = () => {
                     </span>
                     <ReactECharts
                       option={getMiniLineChartOption(data.threatOverview.lowExternalTrend, colorScheme.success.main)}
+                      style={{ width: '50px', height: '30px' }}
+                    />
+                  </Space>
+
+                  {/* 新增境外流量统计 */}
+                  <Space align="center" size={8}>
+                    <Tag style={{
+                      color: '#722ed1', // 使用紫色作为境外流量的标识色
+                      backgroundColor: 'rgba(114, 46, 209, 0.1)',
+                      border: 'none',
+                      padding: '4px 8px'
+                    }}>
+                      出境
+                    </Tag>
+                    <span style={{
+                      fontSize: '28px',
+                      fontWeight: 600,
+                      color: '#722ed1'
+                    }}>
+                      {data.threatOverview.external.foreign}
+                    </span>
+                    <ReactECharts
+                      option={getMiniLineChartOption(data.threatOverview.foreignExternalTrend, '#722ed1')}
                       style={{ width: '50px', height: '30px' }}
                     />
                   </Space>

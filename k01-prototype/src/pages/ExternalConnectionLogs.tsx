@@ -61,6 +61,7 @@ interface LogItem {
   intelSource: string;
   rule?: string;
   assetGroup?: string;
+  isForeign?: boolean;
 }
 
 const ExternalConnectionLogs: React.FC = () => {
@@ -156,11 +157,26 @@ const ExternalConnectionLogs: React.FC = () => {
       title: '目的IP',
       dataIndex: 'targetIp',
       width: 180,
-      render: (ip: string) => (
-        <div style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
+      render: (ip: string, record: LogItem) => (
+        <div style={{
+          whiteSpace: 'nowrap',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'  // 添加间距
+        }}>
           <Typography.Text copyable={{ text: ip }} style={{ margin: 0 }}>
             {ip}
           </Typography.Text>
+          {record.isForeign && (
+            <Tag style={{
+              color: '#722ed1',
+              backgroundColor: 'rgba(114, 46, 209, 0.1)',
+              border: 'none',
+              marginLeft: '4px'
+            }}>
+              出境
+            </Tag>
+          )}
         </div>
       )
     },
@@ -253,6 +269,17 @@ const ExternalConnectionLogs: React.FC = () => {
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0'
     ];
 
+    // 添加一些国外IP段的前缀
+    const foreignIpPrefixes = [
+      '8.8.',    // Google DNS
+      '1.1.',    // Cloudflare
+      '104.16.', // Cloudflare
+      '31.13.',  // Facebook
+      '52.84.',  // Amazon
+      '34.107.', // Google Cloud
+      '157.240.' // Facebook
+    ];
+
     const getRandomElement = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
     const getRandomPort = () => Math.floor(Math.random() * 65535);
     const getRandomIP = () => `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
@@ -267,6 +294,12 @@ const ExternalConnectionLogs: React.FC = () => {
       const requestSize = Math.floor(Math.random() * 1000) + 100;
       const responseSize = Math.floor(Math.random() * 2000) + 200;
       const statusCode = Math.random() > 0.8 ? getRandomElement([400, 403, 404, 500, 502, 503]) : 200;
+
+      // 生成目的IP时，有30%的概率生成出境IP
+      const isForeign = Math.random() < 0.3;
+      const targetIp = isForeign
+        ? `${getRandomElement(foreignIpPrefixes)}${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`
+        : `10.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
 
       return {
         id: `${i}`,
@@ -341,7 +374,7 @@ const ExternalConnectionLogs: React.FC = () => {
             }
           }
         },
-        targetIp: `10.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+        targetIp,
         targetPort: getRandomPort().toString(),
         targetType: getRandomElement(targetTypes),
         hitType: getRandomElement(hitTypes),
@@ -356,7 +389,8 @@ const ExternalConnectionLogs: React.FC = () => {
           attackType: ['SQL注入', 'XSS攻击', '命令注入', 'WebShell'][Math.floor(Math.random() * 4)],
           malformedPacketLength: Math.floor(Math.random() * 1000),
           attackFeatures: ['特征1：异常字符串', '特征2：恶意代码片段', '特征3：非法请求参数'][Math.floor(Math.random() * 3)]
-        }
+        },
+        isForeign,
       };
     });
   };
