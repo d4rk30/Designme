@@ -269,6 +269,7 @@ const getMiniLineChartOption = (data: number[], color: string) => ({
 const Dashboard: React.FC = () => {
   const [attackTimeRange, setAttackTimeRange] = useState<'today' | 'week' | 'month'>('today');  // 攻击监测的时间范围
   const [externalTimeRange, setExternalTimeRange] = useState<'today' | 'week' | 'month'>('today');  // 外联检测的时间范围
+  const [trendTimeRange, setTrendTimeRange] = useState<'today' | 'week' | 'month'>('today');
   const [data, setData] = useState(generateMockData());
 
   useEffect(() => {
@@ -478,99 +479,6 @@ const Dashboard: React.FC = () => {
         data: data.threatOverview.foreignTrend
       }
     ]
-  };
-
-  // 修改情报源分布图配置
-  const intelSourceOption = {
-    tooltip: {
-      trigger: 'item',
-      formatter: '{b}: {c} ({d}%)',
-      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-      borderColor: '#eee',
-      borderWidth: 1,
-      textStyle: {
-        color: '#666',
-        fontSize: 14
-      }
-    },
-    legend: {
-      orient: 'vertical',
-      right: '20%',
-      top: 'middle',
-      itemWidth: 15,
-      itemHeight: 15,
-      textStyle: {
-        fontSize: 14,
-        color: '#666'
-      },
-      itemGap: 16,
-      formatter: (name: string) => {
-        const item = data.threatIntel.sourceDistribution.find(item => item.name === name);
-        return `${name}  ${item?.value || 0}`;
-      }
-    },
-    color: [
-      new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-        { offset: 0, color: '#1890FF' },  // Daybreak Blue-6
-        { offset: 1, color: '#69C0FF' }   // Daybreak Blue-4
-      ]),
-      new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-        { offset: 0, color: '#36CFC9' },  // Cyan-6
-        { offset: 1, color: '#87E8DE' }   // Cyan-4
-      ]),
-      new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-        { offset: 0, color: '#73D13D' },  // Green-6
-        { offset: 1, color: '#95DE64' }   // Green-4
-      ]),
-      new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-        { offset: 0, color: '#597EF7' },  // Geekblue-5
-        { offset: 1, color: '#85A5FF' }   // Geekblue-4
-      ]),
-      new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-        { offset: 0, color: '#FFA940' },  // Orange-5
-        { offset: 1, color: '#FFC069' }   // Orange-4
-      ]),
-      new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-        { offset: 0, color: '#FF7A45' },  // Volcano-5
-        { offset: 1, color: '#FF9C6E' }   // Volcano-4
-      ]),
-      new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-        { offset: 0, color: '#9254DE' },  // Purple-5
-        { offset: 1, color: '#B37FEB' }   // Purple-4
-      ])
-    ],
-    series: [{
-      type: 'pie',
-      radius: ['40%', '70%'],
-      center: ['25%', '50%'],
-      avoidLabelOverlap: true,
-      itemStyle: {
-        borderRadius: 6,
-        borderColor: '#fff',
-        borderWidth: 2,
-        shadowBlur: 10,
-        shadowColor: 'rgba(0, 0, 0, 0.1)'
-      },
-      label: {
-        show: false
-      },
-      emphasis: {
-        scale: true,
-        scaleSize: 10,
-        itemStyle: {
-          shadowBlur: 20,
-          shadowColor: 'rgba(0, 0, 0, 0.2)'
-        }
-      },
-      data: data.threatIntel.sourceDistribution
-        .sort((a, b) => b.value - a.value)
-        .map((item, index) => ({
-          ...item,
-          itemStyle: {
-            opacity: 0.9 - (index * 0.05)
-          }
-        }))
-    }]
   };
 
   return (
@@ -870,31 +778,33 @@ const Dashboard: React.FC = () => {
         </Col>
       </Row>
 
-      {/* 2. 威胁趋势和资产状态 */}
+      {/* 3. 威胁情报指标 */}
       <Row gutter={[24, 24]} style={{ marginBottom: '24px' }}>
         <Col span={12}>
-          <Card title="威胁趋势分析">
-            <ReactECharts option={threatTrendOption} />
-          </Card>
-        </Col>
-        <Col span={12}>
-          <Card title="命中情报源分布">
-            <ReactECharts option={intelSourceOption} />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* 3. 威胁情报指标 */}
-      <Row gutter={[24, 24]}>
-        <Col span={12}>
-          <Card title="威胁情报命中情况" style={{ height: '240px' }}>
+          <Card styles={{
+            body: {
+              padding: '24px',
+              height: '240px'  // 统一高度
+            }
+          }}>
+            <Row justify="space-between" align="middle" style={{ marginBottom: '16px' }}>
+              <Col>
+                <div style={{
+                  fontSize: '16px',
+                  color: '#000000d9',
+                  fontWeight: 500
+                }}>
+                  威胁情报命中情况
+                </div>
+              </Col>
+            </Row>
             <Row gutter={[24, 24]}>
               <Col span={8}>
                 <div style={{
-                  padding: '24px',
+                  padding: '24px',  // 改回与其他卡片一致的内边距
                   borderRadius: '8px',
                   background: '#E6F7FF',
-                  height: '140px',
+                  height: '140px',  // 改为与其他卡片一致的高度
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between'
@@ -995,48 +905,93 @@ const Dashboard: React.FC = () => {
         </Col>
 
         <Col span={12}>
-          <Card title="系统性能监控" style={{ height: '240px' }}>
-            <Row gutter={[32, 16]} justify="space-around" align="middle">
-              <Col span={8}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    marginBottom: 8,
-                    fontSize: '14px',
-                    color: '#666'
-                  }}>CPU使用率</div>
-                  <ReactECharts
-                    option={getGaugeOption(data.realtimeMonitoring.systemStatus.cpu, 'cpu')}
-                    style={{ height: '120px' }}
-                  />
-                </div>
-              </Col>
-              <Col span={8}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    marginBottom: 8,
-                    fontSize: '14px',
-                    color: '#666'
-                  }}>内存使用率</div>
-                  <ReactECharts
-                    option={getGaugeOption(data.realtimeMonitoring.systemStatus.memory, 'memory')}
-                    style={{ height: '120px' }}
-                  />
-                </div>
-              </Col>
-              <Col span={8}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    marginBottom: 8,
-                    fontSize: '14px',
-                    color: '#666'
-                  }}>磁盘使用率</div>
-                  <ReactECharts
-                    option={getGaugeOption(data.realtimeMonitoring.systemStatus.disk, 'disk')}
-                    style={{ height: '120px' }}
-                  />
+          <Card styles={{
+            body: {
+              padding: '24px',
+              height: '240px'  // 统一高度
+            }
+          }}>
+            <Row justify="space-between" align="middle" style={{ marginBottom: '16px' }}>
+              <Col>
+                <div style={{
+                  fontSize: '16px',
+                  color: '#000000d9',
+                  fontWeight: 500
+                }}>
+                  系统性能监控
                 </div>
               </Col>
             </Row>
+            <Row
+              gutter={[32, 16]}
+              justify="space-around"
+              align="middle"
+              style={{ height: 'calc(100% - 40px)' }}  // 减去标题和边距的高度
+            >
+              {(['cpu', 'memory', 'disk'] as const).map((type) => (
+                <Col span={8} key={type}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{
+                      marginBottom: 4,
+                      fontSize: '14px',
+                      color: '#666'
+                    }}>
+                      {type === 'cpu' ? 'CPU使用率' : type === 'memory' ? '内存使用率' : '磁盘使用率'}
+                    </div>
+                    <ReactECharts
+                      option={getGaugeOption(data.realtimeMonitoring.systemStatus[type], type)}
+                      style={{ height: '110px' }}
+                    />
+                  </div>
+                </Col>
+              ))}
+            </Row>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* 2. 威胁趋势 - 移到最后 */}
+      <Row gutter={[24, 24]}>
+        <Col span={24}>
+          <Card>
+            <Row justify="space-between" align="middle" style={{ marginBottom: '16px' }}>
+              <Col>
+                <div style={{
+                  fontSize: '16px',
+                  color: '#000000d9',
+                  fontWeight: 500
+                }}>
+                  威胁趋势分析
+                </div>
+              </Col>
+              <Col>
+                <div style={{
+                  display: 'flex',
+                  gap: '4px'
+                }}>
+                  {['today', 'week', 'month'].map((range) => (
+                    <div
+                      key={range}
+                      style={{
+                        padding: '4px 12px',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        borderRadius: '4px',
+                        backgroundColor: trendTimeRange === range ? '#e6f4ff' : 'transparent',
+                        color: trendTimeRange === range ? '#1890ff' : '#000000d9',
+                        transition: 'all 0.3s',
+                        userSelect: 'none',
+                        fontWeight: 500
+                      }}
+                      onClick={() => setTrendTimeRange(range as 'today' | 'week' | 'month')}
+                    >
+                      {range === 'today' ? '今日' : range === 'week' ? '本周' : '当月'}
+                    </div>
+                  ))}
+                </div>
+              </Col>
+            </Row>
+            <ReactECharts option={threatTrendOption} />
           </Card>
         </Col>
       </Row>

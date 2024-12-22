@@ -304,6 +304,7 @@ const AttackLogs: React.FC = () => {
           'Date': new Date().toUTCString(),
           'Content-Length': String(Math.floor(Math.random() * 1000))
         },
+        statusCode: [200, 400, 403, 404, 500][Math.floor(Math.random() * 5)],
         body: {
           status: [200, 400, 403, 404, 500][Math.floor(Math.random() * 5)],
           message: ['Success', 'Bad Request', 'Forbidden', 'Not Found', 'Server Error'][Math.floor(Math.random() * 5)],
@@ -675,6 +676,7 @@ const AttackLogs: React.FC = () => {
           },
           responseInfo: {
             headers: {},
+            statusCode: 403,
             body: ''
           }
         }}

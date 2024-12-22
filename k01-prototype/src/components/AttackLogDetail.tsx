@@ -32,6 +32,7 @@ interface RequestInfo {
 interface ResponseInfo {
   headers: Record<string, string>;
   body: any;
+  statusCode?: number;
 }
 
 interface LocalVerification {
@@ -235,6 +236,17 @@ const AttackLogDetail: React.FC<AttackLogDetailProps> = ({
                 <Typography.Text copyable>
                   {data?.requestInfo?.url || data?.requestInfo?.dnsName || data?.targetIp || ''}
                 </Typography.Text>
+                {data?.responseInfo?.statusCode && (
+                  <Tag
+                    color={
+                      data.responseInfo.statusCode < 300 ? 'success' :
+                        data.responseInfo.statusCode < 400 ? 'warning' :
+                          'error'
+                    }
+                  >
+                    {data.responseInfo.statusCode}
+                  </Tag>
+                )}
               </div>
               <Button type="link">下载PCAP包</Button>
             </div>
