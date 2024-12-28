@@ -16,6 +16,34 @@ interface IpFavoritesProps {
 
 const { Search } = Input;
 
+const mockFavoriteIps: IpFavorite[] = [
+  {
+    ip: '192.168.1.100',
+    type: 'attack',
+    key: '192.168.1.100'
+  },
+  {
+    ip: '10.0.0.50',
+    type: 'target',
+    key: '10.0.0.50'
+  },
+  {
+    ip: '172.16.0.1',
+    type: 'attack',
+    key: '172.16.0.1'
+  },
+  {
+    ip: '8.8.8.8',
+    type: 'target',
+    key: '8.8.8.8'
+  },
+  {
+    ip: '1.1.1.1',
+    type: 'attack',
+    key: '1.1.1.1'
+  }
+];
+
 const IpFavorites: React.FC<IpFavoritesProps> = ({ open, onClose }) => {
   const [searchText, setSearchText] = useState('');
   const [ipList, setIpList] = useState<IpFavorite[]>([]);
@@ -38,6 +66,12 @@ const IpFavorites: React.FC<IpFavoritesProps> = ({ open, onClose }) => {
       setIpList(formattedIps);
       setFilteredIpList(formattedIps);
       setPagination(prev => ({ ...prev, total: formattedIps.length }));
+    } else {
+      // 如果本地存储中没有数据，使用 mock 数据
+      localStorage.setItem('favoriteIps', JSON.stringify(mockFavoriteIps));
+      setIpList(mockFavoriteIps);
+      setFilteredIpList(mockFavoriteIps);
+      setPagination(prev => ({ ...prev, total: mockFavoriteIps.length }));
     }
   }, []);
 

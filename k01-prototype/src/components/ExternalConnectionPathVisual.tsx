@@ -7,6 +7,7 @@ interface ExternalConnectionPathVisualProps {
   };
   victimInfo: {
     ip: string;
+    isForeign?: boolean;
   };
   protocol: string;
   url: string;
@@ -146,6 +147,15 @@ const ExternalConnectionPathVisual: React.FC<ExternalConnectionPathVisualProps> 
               <Typography.Text copyable style={{ fontSize: '14px' }}>
                 {victimInfo.ip}
               </Typography.Text>
+              {victimInfo.isForeign && (
+                <Tag style={{
+                  color: '#722ed1',
+                  backgroundColor: 'rgba(114, 46, 209, 0.1)',
+                  border: 'none',
+                }}>
+                  出境
+                </Tag>
+              )}
             </Space>
           </div>
         </div>

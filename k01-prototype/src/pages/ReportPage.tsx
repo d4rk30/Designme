@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Card, Table, Button, Space, Progress, message, Popconfirm, Row, Col, Switch, Form, Select, DatePicker, Modal, Input, Radio, TimePicker, InputNumber } from 'antd';
+import { Card, Table, Button, Space, Progress, message, Popconfirm, Row, Col, Switch, Form, Select, DatePicker, Modal, Input, Radio, Alert } from 'antd';
 import type { TableColumnsType } from 'antd';
 import dayjs from 'dayjs';
 import locale from 'antd/es/date-picker/locale/zh_CN';
-import zhCN from 'antd/locale/zh_CN';
 
 interface ReportRecord {
   key: string;
@@ -16,14 +15,7 @@ interface ReportRecord {
 }
 
 interface CycleConfig {
-  type: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
-  time?: string;
-  dayOfWeek?: number;
-  dayOfMonth?: number;
-  month?: number;
-  startDate?: string;
-  interval?: number;
-  intervalUnit?: 'minute' | 'hour' | 'day' | 'month' | 'year';
+  type: 'daily' | 'weekly' | 'monthly';
 }
 
 interface ReportConfig {
@@ -90,7 +82,6 @@ const mockConfigs: ReportConfig[] = [
     name: '攻击监测日报配置',
     cycle: {
       type: 'daily',
-      time: '08:00'
     },
     modules: ['攻击监测告警'],
     format: 'pdf',
@@ -101,8 +92,6 @@ const mockConfigs: ReportConfig[] = [
     name: '外联检测周报配置',
     cycle: {
       type: 'weekly',
-      dayOfWeek: 1,
-      time: '09:00'
     },
     modules: ['外联检测告警'],
     format: 'pdf',
@@ -113,8 +102,6 @@ const mockConfigs: ReportConfig[] = [
     name: '威胁情报月度分析配置',
     cycle: {
       type: 'monthly',
-      dayOfMonth: 1,
-      time: '10:00'
     },
     modules: ['威胁情报'],
     format: 'html',
@@ -154,33 +141,14 @@ interface ExportFormValues {
 const generatePreviewName = (name: string, cycle: CycleConfig) => {
   if (!name) return '';
 
-  const getTimeRange = () => {
-    const now = dayjs();
-    switch (cycle.type) {
-      case 'daily':
-        return `${now.format('YYYYMMDD')}`;
-      case 'weekly':
-        return `${now.startOf('week').format('YYYYMMDD')}-${now.endOf('week').format('YYYYMMDD')}`;
-      case 'monthly':
-        return `${now.startOf('month').format('YYYYMMDD')}-${now.endOf('month').format('YYYYMMDD')}`;
-      case 'yearly':
-        return `${now.startOf('year').format('YYYYMMDD')}-${now.endOf('year').format('YYYYMMDD')}`;
-      case 'custom':
-        return '自定义时间';
-      default:
-        return '';
-    }
-  };
-
   const cycleText = {
     daily: '每日-',
     weekly: '每周-',
-    monthly: '每月-',
-    yearly: '每年-',
-    custom: '自定义-'
+    monthly: '每月-'
   }[cycle.type];
 
-  return `${name}-${cycleText}${getTimeRange()}`;
+  const now = dayjs();
+  return `${name}-${cycleText}${now.format('YYYYMMDD')}`;
 };
 
 // 在文件顶部，其他 interface 定义之前添加
@@ -192,6 +160,13 @@ const timeRangePresets: {
     { label: '本周', value: [dayjs().startOf('week'), dayjs().endOf('week')] },
     { label: '当月', value: [dayjs().startOf('month'), dayjs().endOf('month')] },
   ];
+
+// 添加提示信息映射
+const cycleAlertMessages: Record<CycleConfig['type'], string> = {
+  daily: '每日6点进行导出，内容的范围是前一天00:00到23:59:59之间的数据。',
+  weekly: '每周一6点进行导出，内容的范围是上一周的周一00:00到周日23:59:59之间的数据。',
+  monthly: '每月1日6点进行导出，内容的范围是上一个月1日00:00到上个月最后一天23:59:59之间的数据。'
+};
 
 const ReportPage: React.FC = () => {
   const [form] = Form.useForm();
@@ -208,7 +183,6 @@ const ReportPage: React.FC = () => {
   const [configForm] = Form.useForm();
   const [editingConfig, setEditingConfig] = useState<ReportConfig | null>(null);
   const [previewName, setPreviewName] = useState('');
-  const [cycleType, setCycleType] = useState<CycleConfig['type']>('daily');
 
   const handleDownload = (record: ReportRecord) => {
     if (record.progress === 100) {
@@ -287,23 +261,14 @@ const ReportPage: React.FC = () => {
   };
 
   const handleConfigSubmit = (values: any) => {
-    // 转换时间格式
-    const submitValues = {
-      ...values,
-      cycle: {
-        ...values.cycle,
-        time: values.cycle.time ? values.cycle.time.format('HH:mm') : undefined,
-        startDate: values.cycle.startDate ? values.cycle.startDate.format('YYYY-MM-DD HH:mm') : undefined,
-      }
-    };
-
+    // 移除时间转换逻辑，直接提交值
     if (editingConfig) {
       setConfigs(configs.map(config =>
-        config.key === editingConfig.key ? { ...submitValues, key: editingConfig.key } : config
+        config.key === editingConfig.key ? { ...values, key: editingConfig.key } : config
       ));
       message.success('编辑成功');
     } else {
-      setConfigs([...configs, { ...submitValues, key: Date.now().toString() }]);
+      setConfigs([...configs, { ...values, key: Date.now().toString() }]);
       message.success('新增成功');
     }
     setIsConfigModalVisible(false);
@@ -320,17 +285,7 @@ const ReportPage: React.FC = () => {
   const showConfigModal = (config?: ReportConfig) => {
     if (config) {
       setEditingConfig(config);
-      // 转换时间字符串为 dayjs 对象
-      const formValues = {
-        ...config,
-        cycle: {
-          ...config.cycle,
-          time: config.cycle.time ? dayjs(config.cycle.time, 'HH:mm') : undefined,
-          startDate: config.cycle.startDate ? dayjs(config.cycle.startDate) : undefined,
-        }
-      };
-      configForm.setFieldsValue(formValues);
-      setCycleType(config.cycle.type);
+      configForm.setFieldsValue(config);
     } else {
       configForm.resetFields();
     }
@@ -350,12 +305,6 @@ const ReportPage: React.FC = () => {
     } else {
       setPreviewName('');
     }
-  };
-
-  const handleCycleTypeChange = (type: CycleConfig['type']) => {
-    setCycleType(type);
-    const name = configForm.getFieldValue('name');
-    setPreviewName(generatePreviewName(name, { type }));
   };
 
   const columns: TableColumnsType<ReportRecord> = [
@@ -794,196 +743,35 @@ const ReportPage: React.FC = () => {
           >
             <Select
               placeholder="请选择导出周期"
-              onChange={handleCycleTypeChange}
+              onChange={(value: CycleConfig['type']) => {
+                const name = configForm.getFieldValue('name');
+                if (name) {
+                  setPreviewName(generatePreviewName(name, { type: value }));
+                }
+              }}
             >
               <Select.Option value="daily">每日</Select.Option>
               <Select.Option value="weekly">每周</Select.Option>
               <Select.Option value="monthly">每月</Select.Option>
-              <Select.Option value="yearly">每年</Select.Option>
-              <Select.Option value="custom">自定义</Select.Option>
             </Select>
           </Form.Item>
 
-          {cycleType === 'daily' && (
-            <Form.Item
-              name={['cycle', 'time']}
-              label="导出时间"
-              rules={[{ required: true, message: '请选择导出时间' }]}
-            >
-              <TimePicker
-                format="HH:mm"
-                placeholder="请选择时间"
-                style={{ width: '100%' }}
-                locale={locale}
-                showNow={false}
-              />
-            </Form.Item>
-          )}
-
-          {cycleType === 'weekly' && (
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  name={['cycle', 'dayOfWeek']}
-                  label="每周几"
-                  rules={[{ required: true, message: '请选择每周几' }]}
-                >
-                  <Select style={{ width: '100%' }}>
-                    {[1, 2, 3, 4, 5, 6, 7].map(day => (
-                      <Select.Option key={day} value={day}>
-                        星期{['一', '二', '三', '四', '五', '六', '日'][day - 1]}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  name={['cycle', 'time']}
-                  label="时间"
-                  rules={[{ required: true, message: '请选择时间' }]}
-                >
-                  <TimePicker
-                    format="HH:mm"
-                    placeholder="请选择时间"
-                    style={{ width: '100%' }}
-                    locale={locale}
-                    showNow={false}
+          <Form.Item noStyle shouldUpdate={(prevValues, currentValues) =>
+            prevValues.cycle?.type !== currentValues.cycle?.type
+          }>
+            {({ getFieldValue }) => {
+              const cycleType = getFieldValue(['cycle', 'type']);
+              return cycleType ? (
+                <Form.Item style={{ marginTop: -10 }}>
+                  <Alert
+                    message={cycleAlertMessages[cycleType as CycleConfig['type']]}
+                    type="info"
+                    style={{ marginBottom: 0 }}
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-          )}
-
-          {cycleType === 'monthly' && (
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  name={['cycle', 'dayOfMonth']}
-                  label="每月几号"
-                  rules={[{ required: true, message: '请选择每月几号' }]}
-                >
-                  <Select style={{ width: '100%' }}>
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                      <Select.Option key={day} value={day}>
-                        {day}号
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  name={['cycle', 'time']}
-                  label="时间"
-                  rules={[{ required: true, message: '请选择时间' }]}
-                >
-                  <TimePicker
-                    format="HH:mm"
-                    placeholder="请选择时间"
-                    style={{ width: '100%' }}
-                    locale={locale}
-                    showNow={false}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-          )}
-
-          {cycleType === 'yearly' && (
-            <Row gutter={16}>
-              <Col span={8}>
-                <Form.Item
-                  name={['cycle', 'month']}
-                  label="月份"
-                  rules={[{ required: true, message: '请选择月份' }]}
-                >
-                  <Select style={{ width: '100%' }}>
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
-                      <Select.Option key={month} value={month}>
-                        {month}月
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item
-                  name={['cycle', 'dayOfMonth']}
-                  label="日期"
-                  rules={[{ required: true, message: '请选择日期' }]}
-                >
-                  <Select style={{ width: '100%' }}>
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                      <Select.Option key={day} value={day}>
-                        {day}日
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item
-                  name={['cycle', 'time']}
-                  label="时间"
-                  rules={[{ required: true, message: '请选择时间' }]}
-                >
-                  <TimePicker
-                    format="HH:mm"
-                    placeholder="请选择时间"
-                    style={{ width: '100%' }}
-                    locale={locale}
-                    showNow={false}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-          )}
-
-          {cycleType === 'custom' && (
-            <div>
-              <Form.Item
-                name={['cycle', 'startDate']}
-                label="起始时间"
-                rules={[{ required: true, message: '请选择起始时间' }]}
-              >
-                <DatePicker
-                  showTime={{ format: 'HH:mm' }}
-                  format="YYYY-MM-DD HH:mm"
-                  style={{ width: '100%' }}
-                  placeholder="请选择起始时间"
-                  locale={zhCN.DatePicker}
-                  showNow={false}
-                />
-              </Form.Item>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    name={['cycle', 'interval']}
-                    label="间隔时间"
-                    rules={[{ required: true, message: '请输入间隔时间' }]}
-                  >
-                    <InputNumber min={1} style={{ width: '100%' }} />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    name={['cycle', 'intervalUnit']}
-                    label="间隔单位"
-                    rules={[{ required: true, message: '请选择间隔单位' }]}
-                  >
-                    <Radio.Group style={{ width: '100%' }}>
-                      <Radio.Button value="minute" style={{ width: '20%', textAlign: 'center' }}>分</Radio.Button>
-                      <Radio.Button value="hour" style={{ width: '20%', textAlign: 'center' }}>时</Radio.Button>
-                      <Radio.Button value="day" style={{ width: '20%', textAlign: 'center' }}>天</Radio.Button>
-                      <Radio.Button value="month" style={{ width: '20%', textAlign: 'center' }}>月</Radio.Button>
-                      <Radio.Button value="year" style={{ width: '20%', textAlign: 'center' }}>年</Radio.Button>
-                    </Radio.Group>
-                  </Form.Item>
-                </Col>
-              </Row>
-            </div>
-          )}
+              ) : null;
+            }}
+          </Form.Item>
 
           <Form.Item
             name="modules"

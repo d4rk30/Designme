@@ -46,6 +46,7 @@ interface IntelTypeData {
 interface CollapsedChartsProps {
   trendData: AttackTrendData[];
   intelTypeData: IntelTypeData[];
+  style?: React.CSSProperties;
 }
 
 const CollapsedCharts: React.FC<CollapsedChartsProps> = ({ trendData, intelTypeData }) => {
@@ -89,21 +90,20 @@ const CollapsedCharts: React.FC<CollapsedChartsProps> = ({ trendData, intelTypeD
   }, [isPausedIntelType, intelTypeData.length]);
 
   return (
-    <AnimatedDiv 
-      style={{ 
-        height: '32px', 
-        display: 'flex', 
-        alignItems: 'center', 
-        padding: '0 24px',
-        background: '#fff',
-        overflow: 'hidden'
+    <AnimatedDiv
+      style={{
+        height: '32px',
+        display: 'flex',
+        alignItems: 'center',
+        width: '100%',
+        justifyContent: 'space-between'
       }}
     >
       {/* 攻击趋势 */}
-      <div 
-        style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
           gap: '8px',
           marginRight: '24px',
           flexShrink: 0
@@ -117,25 +117,25 @@ const CollapsedCharts: React.FC<CollapsedChartsProps> = ({ trendData, intelTypeD
           <span style={{ fontSize: '14px', color: '#666' }}>
             {trendData[currentTrendIndex]?.date}
           </span>
-          <Tag style={{ 
-            marginLeft: '8px', 
-            background: 'rgba(255, 77, 79, 0.1)', 
+          <Tag style={{
+            marginLeft: '8px',
+            background: 'rgba(255, 77, 79, 0.1)',
             color: '#ff4d4f',
             border: '1px solid rgba(255, 77, 79, 0.2)'
           }}>
             高危：{trendData[currentTrendIndex]?.high}
           </Tag>
-          <Tag style={{ 
-            marginLeft: '8px', 
-            background: 'rgba(250, 173, 20, 0.1)', 
+          <Tag style={{
+            marginLeft: '8px',
+            background: 'rgba(250, 173, 20, 0.1)',
             color: '#faad14',
             border: '1px solid rgba(250, 173, 20, 0.2)'
           }}>
             中危：{trendData[currentTrendIndex]?.medium}
           </Tag>
-          <Tag style={{ 
-            marginLeft: '8px', 
-            background: 'rgba(82, 196, 26, 0.1)', 
+          <Tag style={{
+            marginLeft: '8px',
+            background: 'rgba(82, 196, 26, 0.1)',
             color: '#52c41a',
             border: '1px solid rgba(82, 196, 26, 0.2)'
           }}>
@@ -148,14 +148,13 @@ const CollapsedCharts: React.FC<CollapsedChartsProps> = ({ trendData, intelTypeD
       <div style={{ width: '1px', height: '20px', background: '#f0f0f0', margin: '0 24px', flexShrink: 0 }} />
 
       {/* 情报类型分布 */}
-      <div 
-        style={{ 
-          display: 'flex', 
+      <div
+        style={{
+          display: 'flex',
           alignItems: 'center',
           gap: '24px',
-          minWidth: 0,
           flex: 1,
-          overflow: 'hidden'
+          justifyContent: 'space-between'
         }}
         onMouseEnter={() => setIsPausedIntelType(true)}
         onMouseLeave={() => setIsPausedIntelType(false)}
@@ -169,11 +168,11 @@ const CollapsedCharts: React.FC<CollapsedChartsProps> = ({ trendData, intelTypeD
             .slice(currentIntelTypeIndex * 3, (currentIntelTypeIndex + 1) * 3)
             .map((item, index) => (
               <TypeItem key={`${item.type}-${currentIntelTypeIndex}-${index}`}>
-                <div 
-                  style={{ 
-                    width: '18px', 
-                    height: '18px', 
-                    borderRadius: '50%', 
+                <div
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
                     background: '#e6f7ff',
                     display: 'flex',
                     alignItems: 'center',
@@ -186,9 +185,9 @@ const CollapsedCharts: React.FC<CollapsedChartsProps> = ({ trendData, intelTypeD
                   {currentIntelTypeIndex * 3 + index + 1}
                 </div>
                 <Text className="type-text">{item.type}</Text>
-                <Tag style={{ 
-                  marginLeft: '4px', 
-                  background: 'rgba(24, 144, 255, 0.1)', 
+                <Tag style={{
+                  marginLeft: '4px',
+                  background: 'rgba(24, 144, 255, 0.1)',
                   color: '#1890ff',
                   border: '1px solid rgba(24, 144, 255, 0.2)',
                   flexShrink: 0

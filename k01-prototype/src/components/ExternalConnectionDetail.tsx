@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Drawer, Tabs, Typography, Card, Space, Empty, Table, Tag, Button, Modal, InputNumber, Segmented, message } from 'antd';
+import { Drawer, Tabs, Typography, Card, Space, Empty, Table, Modal, InputNumber, Segmented, message } from 'antd';
 import type { TabsProps } from 'antd';
-import { BlockOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import ExternalConnectionPathVisual from './ExternalConnectionPathVisual';
 
 const { Title } = Typography;
@@ -45,6 +44,7 @@ interface ExternalConnectionDetailProps {
     rule?: string;
     assetGroup?: string;
     requestInfo?: RequestInfo;
+    isForeign?: boolean;
   }
 }
 
@@ -54,21 +54,10 @@ const ExternalConnectionDetail: React.FC<ExternalConnectionDetailProps> = ({
   data
 }) => {
   const [timeModalVisible, setTimeModalVisible] = useState(false);
-  const [listType, setListType] = useState<'black' | 'white'>('black');
   const [duration, setDuration] = useState<number>(1);
   const [timeUnit, setTimeUnit] = useState<string>('hour');
 
-  // 获取协议标签的颜色
-  const getProtocolColor = (protocol: string) => {
-    const colors: Record<string, string> = {
-      'http': 'blue',
-      'https': 'green',
-      'dns': 'orange',
-      'ftp': 'purple',
-      'smtp': 'cyan',
-    };
-    return colors[protocol?.toLowerCase()] || 'default';
-  };
+
 
   // 处理请求头表格数据
   const requestHeadersData = React.useMemo(() => {
@@ -87,8 +76,8 @@ const ExternalConnectionDetail: React.FC<ExternalConnectionDetailProps> = ({
       children: (
         <Table
           columns={[
-            { title: '名称', dataIndex: 'name', key: 'name' , width: '30%'},
-            { title: '值', dataIndex: 'value', key: 'value' , width: '70%'},
+            { title: '名称', dataIndex: 'name', key: 'name', width: '30%' },
+            { title: '值', dataIndex: 'value', key: 'value', width: '70%' },
           ]}
           dataSource={requestHeadersData}
           pagination={false}
@@ -118,7 +107,7 @@ const ExternalConnectionDetail: React.FC<ExternalConnectionDetailProps> = ({
       label: '日志信息',
       children: (
         <Space direction="vertical" style={{ width: '100%' }} size="large">
-          <Card 
+          <Card
             title="告警信息详情"
           >
             <ExternalConnectionPathVisual
@@ -127,6 +116,7 @@ const ExternalConnectionDetail: React.FC<ExternalConnectionDetailProps> = ({
               }}
               victimInfo={{
                 ip: data?.targetIp || '',
+                isForeign: data?.isForeign,
               }}
               protocol={data?.requestInfo?.protocol || 'HTTP'}
               url={data?.requestInfo?.url || ''}
@@ -148,27 +138,21 @@ const ExternalConnectionDetail: React.FC<ExternalConnectionDetailProps> = ({
     },
   ];
 
-  // 处理打开时间设置对话框
-  const handleOpenTimeModal = (type: 'black' | 'white') => {
-    setListType(type);
-    setTimeModalVisible(true);
-  };
 
   // 处理确认添加到名单
   const handleConfirmAddToList = () => {
     const selectedUnit = timeUnits.find(unit => unit.value === timeUnit);
     let totalSeconds = 0;
-    
+
     if (selectedUnit?.value === 'forever') {
       totalSeconds = -1;
     } else if (selectedUnit) {
       totalSeconds = duration * selectedUnit.multiplier;
     }
 
-    message.success(`已将IP ${data.attackIp} 添加到${listType === 'black' ? '黑' : '白'}名单，时长：${
-      totalSeconds === -1 ? '永久' : `${duration}${selectedUnit?.label}`
-    }`);
-    
+    message.success(`已将IP ${data.attackIp} 添加到黑名单，时长：${totalSeconds === -1 ? '永久' : `${duration}${selectedUnit?.label}`
+      }`);
+
     setTimeModalVisible(false);
   };
 
@@ -189,7 +173,7 @@ const ExternalConnectionDetail: React.FC<ExternalConnectionDetailProps> = ({
       </Drawer>
 
       <Modal
-        title={`添加到${listType === 'black' ? '黑' : '白'}名单`}
+        title="添加到黑名单"
         open={timeModalVisible}
         onOk={handleConfirmAddToList}
         onCancel={() => setTimeModalVisible(false)}

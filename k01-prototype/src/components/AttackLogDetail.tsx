@@ -32,6 +32,7 @@ interface RequestInfo {
 interface ResponseInfo {
   headers: Record<string, string>;
   body: any;
+  statusCode?: number;
 }
 
 interface LocalVerification {
@@ -42,6 +43,41 @@ interface LocalVerification {
   malformedPacketLength: number;
   attackFeatures: string;
   aiDetection: 'hit' | 'miss';
+}
+
+interface DnsResponse {
+  header: {
+    id: number;
+    qr: boolean;
+    opcode: string;
+    aa: boolean;
+    tc: boolean;
+    rd: boolean;
+    ra: boolean;
+    rcode: string;
+    qdcount: number;
+    ancount: number;
+    nscount: number;
+    arcount: number;
+  };
+  answers: Array<{
+    name: string;
+    type: string;
+    ttl: number;
+    data: string;
+  }>;
+  authority: Array<{
+    name: string;
+    type: string;
+    ttl: number;
+    data: string;
+  }>;
+  additional: Array<{
+    name: string;
+    type: string;
+    ttl: number;
+    data: string;
+  }>;
 }
 
 interface AttackLogDetailProps {
@@ -63,8 +99,56 @@ interface AttackLogDetailProps {
     requestInfo?: RequestInfo;
     responseInfo?: ResponseInfo;
     localVerification?: LocalVerification;
+    dnsResponse?: DnsResponse;
   };
 }
+
+const mockDnsResponse: DnsResponse = {
+  header: {
+    id: 1234,
+    qr: true,
+    opcode: 'QUERY',
+    aa: false,
+    tc: false,
+    rd: true,
+    ra: true,
+    rcode: 'NOERROR',
+    qdcount: 1,
+    ancount: 2,
+    nscount: 1,
+    arcount: 1
+  },
+  answers: [
+    {
+      name: "example.com",
+      type: "A",
+      ttl: 300,
+      data: "93.184.216.34"
+    },
+    {
+      name: "example.com",
+      type: "AAAA",
+      ttl: 300,
+      data: "2606:2800:220:1:248:1893:25c8:1946"
+    }
+  ],
+  authority: [
+    {
+      name: "example.com",
+      type: "NS",
+      ttl: 172800,
+      data: "a.iana-servers.net"
+    }
+  ],
+  additional: [
+    {
+      name: "a.iana-servers.net",
+      type: "A",
+      ttl: 172800,
+      data: "199.43.135.53"
+    }
+  ]
+};
 
 const AttackLogDetail: React.FC<AttackLogDetailProps> = ({
   open,
@@ -235,10 +319,125 @@ const AttackLogDetail: React.FC<AttackLogDetailProps> = ({
                 <Typography.Text copyable>
                   {data?.requestInfo?.url || data?.requestInfo?.dnsName || data?.targetIp || ''}
                 </Typography.Text>
+                {data?.responseInfo?.statusCode && (
+                  <Tag
+                    color={
+                      data.responseInfo.statusCode < 300 ? 'success' :
+                        data.responseInfo.statusCode < 400 ? 'warning' :
+                          'error'
+                    }
+                  >
+                    {data.responseInfo.statusCode}
+                  </Tag>
+                )}
               </div>
               <Button type="link">下载PCAP包</Button>
             </div>
           </Card>
+
+          {(data?.dnsResponse || data?.requestInfo?.protocol === 'dns') && (
+            <Card title="DNS响应">
+              <Tabs
+                items={[
+                  {
+                    key: 'header',
+                    label: '报文头',
+                    children: (
+                      <Descriptions bordered column={2} size="small">
+                        <Descriptions.Item label="报文标识">
+                          {(data?.dnsResponse || mockDnsResponse).header.id}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="响应标志">
+                          {(data?.dnsResponse || mockDnsResponse).header.qr ? '响应' : '查询'}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="操作码">
+                          {(data?.dnsResponse || mockDnsResponse).header.opcode}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="权威应答">
+                          {(data?.dnsResponse || mockDnsResponse).header.aa ? '是' : '否'}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="截断标志">
+                          {(data?.dnsResponse || mockDnsResponse).header.tc ? '是' : '否'}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="期望递归">
+                          {(data?.dnsResponse || mockDnsResponse).header.rd ? '是' : '否'}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="递归可用">
+                          {(data?.dnsResponse || mockDnsResponse).header.ra ? '是' : '否'}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="返回码">
+                          {(data?.dnsResponse || mockDnsResponse).header.rcode}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="问题数">
+                          {(data?.dnsResponse || mockDnsResponse).header.qdcount}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="回答数">
+                          {(data?.dnsResponse || mockDnsResponse).header.ancount}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="授权数">
+                          {(data?.dnsResponse || mockDnsResponse).header.nscount}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="附加数">
+                          {(data?.dnsResponse || mockDnsResponse).header.arcount}
+                        </Descriptions.Item>
+                      </Descriptions>
+                    ),
+                  },
+                  {
+                    key: 'answers',
+                    label: '应答记录',
+                    children: (
+                      <Table
+                        dataSource={(data?.dnsResponse || mockDnsResponse).answers.map((item, index) => ({ ...item, key: index }))}
+                        columns={[
+                          { title: '域名', dataIndex: 'name', key: 'name' },
+                          { title: '记录类型', dataIndex: 'type', key: 'type' },
+                          { title: 'TTL', dataIndex: 'ttl', key: 'ttl' },
+                          { title: '记录值', dataIndex: 'data', key: 'data' },
+                        ]}
+                        pagination={false}
+                        size="small"
+                      />
+                    ),
+                  },
+                  {
+                    key: 'authority',
+                    label: '权威记录',
+                    children: (
+                      <Table
+                        dataSource={(data?.dnsResponse || mockDnsResponse).authority.map((item, index) => ({ ...item, key: index }))}
+                        columns={[
+                          { title: '域名', dataIndex: 'name', key: 'name' },
+                          { title: '记录类型', dataIndex: 'type', key: 'type' },
+                          { title: 'TTL', dataIndex: 'ttl', key: 'ttl' },
+                          { title: '记录值', dataIndex: 'data', key: 'data' },
+                        ]}
+                        pagination={false}
+                        size="small"
+                      />
+                    ),
+                  },
+                  {
+                    key: 'additional',
+                    label: '附加记录',
+                    children: (
+                      <Table
+                        dataSource={(data?.dnsResponse || mockDnsResponse).additional.map((item, index) => ({ ...item, key: index }))}
+                        columns={[
+                          { title: '域名', dataIndex: 'name', key: 'name' },
+                          { title: '记录类型', dataIndex: 'type', key: 'type' },
+                          { title: 'TTL', dataIndex: 'ttl', key: 'ttl' },
+                          { title: '记录值', dataIndex: 'data', key: 'data' },
+                        ]}
+                        pagination={false}
+                        size="small"
+                      />
+                    ),
+                  },
+                ]}
+              />
+            </Card>
+          )}
 
           {data?.requestInfo && (
             <Card title="请求信息">

@@ -17,44 +17,25 @@
     font-size: 14px !important;
 }
 
-/* 如果有其他需要全局覆盖的样式，都可以放在这里 */
-
 .ant-menu-inline {
+
+    /* 自定义滚动条样式 */
     &::-webkit-scrollbar {
+        /* 设置滚动条的宽度为 6px */
         width: 6px;
     }
 
     &::-webkit-scrollbar-thumb {
+        /* 设置滚动条滑块的背景颜色为半透明白色 */
         background: rgba(255, 255, 255, 0.2);
+        /* 设置滑块的圆角半径为 3px */
         border-radius: 3px;
+        /* 默认情况下，滑块的可见性为隐藏 */
         visibility: hidden;
     }
 
+    /* 当鼠标悬停在 .ant-menu-inline 上时，显示滑块 */
     &:hover::-webkit-scrollbar-thumb {
         visibility: visible;
     }
-}
-
-/* 为了兼容 Firefox */
-.ant-menu-inline {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
-}
-
-.ant-menu-inline:not(:hover) {
-    scrollbar-color: transparent transparent;
-}
-
-.custom-menu-scroll::-webkit-scrollbar {
-    width: 6px;
-}
-
-.custom-menu-scroll::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
-    visibility: hidden;
-}
-
-.custom-menu-scroll:hover::-webkit-scrollbar-thumb {
-    visibility: visible;
 }

@@ -1,6 +1,6 @@
 import { Breadcrumb, Switch, DatePicker, Space, Tooltip } from 'antd';
 import { useLocation } from 'react-router-dom';
-import { QuestionCircleOutlined, ReloadOutlined } from '@ant-design/icons';
+import { QuestionCircleOutlined } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 
@@ -145,10 +145,6 @@ const PageHeader: React.FC<PageHeaderProps> = ({ extra }) => {
       <span style={{ color: '#00000073', fontSize: '14px' }}>
         最近更新时间：{dayjs().format('YYYY-MM-DD HH:mm:ss')}
       </span>
-      <ReloadOutlined
-        style={{ cursor: 'pointer', color: '#00000073' }}
-        onClick={() => window.location.reload()}
-      />
     </Space>
   ) : extra;
 

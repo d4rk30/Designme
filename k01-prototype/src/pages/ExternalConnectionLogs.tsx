@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Space, Input, Form, Select, Row, Col, Modal, message, Tag, Typography } from 'antd';
-import { AttackTrendChart } from '../components/AttackTrendChart';
-import { IntelTypeChart } from '../components/IntelTypeChart';
-import ExternalConnectionDetail from '../components/ExternalConnectionDetail';
+import React, { useState, useEffect, useRef } from 'react';
+import { Card, Table, Button, Space, Input, Form, Select, Row, Col, Cascader, Modal, message, Typography, Tag } from 'antd';
+import ReactECharts from 'echarts-for-react';
 import dayjs from 'dayjs';
+import styled from '@emotion/styled';
+import ExternalConnectionDetail from '../components/ExternalConnectionDetail';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import moment from 'moment';
@@ -61,7 +61,41 @@ interface LogItem {
   intelSource: string;
   rule?: string;
   assetGroup?: string;
+  isForeign?: boolean;
 }
+
+interface IntelTypeData {
+  type: string;
+  count: number;
+  percentage: number;
+}
+
+// 折叠图表的动画样式
+const AnimatedDiv = styled.div`
+  .content {
+    transition: opacity 0.3s ease-in-out;
+    opacity: 1;
+  }
+  
+  .content.fade-out {
+    opacity: 0;
+  }
+`;
+
+const TypeItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-shrink: 0;
+  
+  .type-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 120px;
+  }
+`;
 
 const ExternalConnectionLogs: React.FC = () => {
   // 合并状态
@@ -156,11 +190,26 @@ const ExternalConnectionLogs: React.FC = () => {
       title: '目的IP',
       dataIndex: 'targetIp',
       width: 180,
-      render: (ip: string) => (
-        <div style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
+      render: (ip: string, record: LogItem) => (
+        <div style={{
+          whiteSpace: 'nowrap',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'  // 添加间距
+        }}>
           <Typography.Text copyable={{ text: ip }} style={{ margin: 0 }}>
             {ip}
           </Typography.Text>
+          {record.isForeign && (
+            <Tag style={{
+              color: '#722ed1',
+              backgroundColor: 'rgba(114, 46, 209, 0.1)',
+              border: 'none',
+              marginLeft: '4px'
+            }}>
+              出境
+            </Tag>
+          )}
         </div>
       )
     },
@@ -253,6 +302,17 @@ const ExternalConnectionLogs: React.FC = () => {
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0'
     ];
 
+    // 添加一些国外IP段的前缀
+    const foreignIpPrefixes = [
+      '8.8.',    // Google DNS
+      '1.1.',    // Cloudflare
+      '104.16.', // Cloudflare
+      '31.13.',  // Facebook
+      '52.84.',  // Amazon
+      '34.107.', // Google Cloud
+      '157.240.' // Facebook
+    ];
+
     const getRandomElement = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
     const getRandomPort = () => Math.floor(Math.random() * 65535);
     const getRandomIP = () => `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
@@ -267,6 +327,12 @@ const ExternalConnectionLogs: React.FC = () => {
       const requestSize = Math.floor(Math.random() * 1000) + 100;
       const responseSize = Math.floor(Math.random() * 2000) + 200;
       const statusCode = Math.random() > 0.8 ? getRandomElement([400, 403, 404, 500, 502, 503]) : 200;
+
+      // 生成目的IP时，有30%的概率生成出境IP
+      const isForeign = Math.random() < 0.3;
+      const targetIp = isForeign
+        ? `${getRandomElement(foreignIpPrefixes)}${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`
+        : `10.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
 
       return {
         id: `${i}`,
@@ -341,7 +407,7 @@ const ExternalConnectionLogs: React.FC = () => {
             }
           }
         },
-        targetIp: `10.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+        targetIp,
         targetPort: getRandomPort().toString(),
         targetType: getRandomElement(targetTypes),
         hitType: getRandomElement(hitTypes),
@@ -356,7 +422,8 @@ const ExternalConnectionLogs: React.FC = () => {
           attackType: ['SQL注入', 'XSS攻击', '命令注入', 'WebShell'][Math.floor(Math.random() * 4)],
           malformedPacketLength: Math.floor(Math.random() * 1000),
           attackFeatures: ['特征1：异常字符串', '特征2：恶意代码片段', '特征3：非法请求参数'][Math.floor(Math.random() * 3)]
-        }
+        },
+        isForeign,
       };
     });
   };
@@ -442,7 +509,236 @@ const ExternalConnectionLogs: React.FC = () => {
     message.success('删除成功');
   };
 
-  // 构建下拉菜单
+  // 折叠图表组件
+  const CollapsedCharts = ({ trendData, intelTypeData, style }: any) => {
+    // 复制 CollapsedCharts 的完整代码
+  };
+
+  // 攻击趋势图组件
+  const AttackTrendChart = () => {
+    // 生成过去一周的日期和数据
+    const generateData = () => {
+      const dates = [];
+      const highRiskData = [];
+      const mediumRiskData = [];
+      const lowRiskData = [];
+
+      for (let i = 6; i >= 0; i--) {
+        const date = dayjs().subtract(i, 'day').format('MM-DD');
+        dates.push(date);
+
+        // 高危数据：2000-4800 的范围，有20%的概率生成4800-5000的数据
+        const highRisk = Math.random() < 0.2
+          ? Math.floor(Math.random() * 200 + 4800)  // 4800-5000
+          : Math.floor(Math.random() * 2800 + 2000); // 2000-4800
+
+        // 中危数据：1500-3500
+        const mediumRisk = Math.floor(Math.random() * 2000 + 1500);
+
+        // 低危数据：500-2500
+        const lowRisk = Math.floor(Math.random() * 2000 + 500);
+
+        highRiskData.push(highRisk);
+        mediumRiskData.push(mediumRisk);
+        lowRiskData.push(lowRisk);
+      }
+
+      return {
+        dates,
+        highRiskData,
+        mediumRiskData,
+        lowRiskData,
+      };
+    };
+
+    const { dates, highRiskData, mediumRiskData, lowRiskData } = generateData();
+
+    const option = {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'shadow'
+        }
+      },
+      legend: {
+        data: ['高危', '中危', '低危'],
+        top: 0,
+        left: 'center',
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        top: '40px',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        data: dates,
+      },
+      yAxis: {
+        type: 'value',
+        min: 0,
+        max: 5000,
+        interval: 1000,
+      },
+      series: [
+        {
+          name: '高危',
+          type: 'bar',
+          data: highRiskData,
+          itemStyle: {
+            color: '#ff4d4f',
+            borderRadius: [4, 4, 0, 0]
+          }
+        },
+        {
+          name: '中危',
+          type: 'bar',
+          data: mediumRiskData,
+          itemStyle: {
+            color: '#faad14',
+            borderRadius: [4, 4, 0, 0]
+          }
+        },
+        {
+          name: '低危',
+          type: 'bar',
+          data: lowRiskData,
+          itemStyle: {
+            color: '#1890ff',
+            borderRadius: [4, 4, 0, 0]
+          }
+        }
+      ]
+    };
+
+    return (
+      <>
+        <div style={{ marginBottom: '8px', marginLeft: '12px' }}>
+          <span style={{ fontWeight: 500 }}>攻击趋势</span>
+          <span style={{ fontSize: '12px', color: '#8c8c8c', marginLeft: '4px' }}>（单位：次数）</span>
+        </div>
+        <ReactECharts
+          option={option}
+          style={{ height: '180px' }}
+          opts={{ renderer: 'svg' }}
+        />
+      </>
+    );
+  };
+
+  // 情报类型图组件
+  const IntelTypeChart = () => {
+    // 生成示例数据
+    const generateData = () => {
+      const types = [
+        '僵尸网络', '漏洞利用', '恶意IP', '暴力破解', '扫描探测',
+        '拒绝服务攻击', 'WebShell攻击', '恶意代码攻击', '代理IP', '木马蠕虫攻击'
+      ];
+
+      return types.map(type => ({
+        name: type,
+        value: Math.floor(Math.random() * 1000)
+      }));
+    };
+
+    const data = generateData();
+    const total = data.reduce((sum, item) => sum + item.value, 0);
+
+    // 蓝色系渐变色
+    const colors = [
+      '#1890ff', '#2E9BFF', '#44A6FF', '#5AB1FF', '#70BCFF',
+      '#86C7FF', '#9CD2FF', '#B2DDFF', '#C8E8FF', '#DEF3FF'
+    ];
+
+    const option = {
+      color: colors,
+      tooltip: {
+        trigger: 'item',
+        formatter: (params: { name: any; value: any; percent: any; }) => {
+          return `${params.name}: ${params.value} 次 (${params.percent}%)`;
+        }
+      },
+      legend: [
+        {
+          type: 'scroll',
+          orient: 'vertical',
+          right: '35%',
+          top: 'middle',
+          itemWidth: 10,
+          itemHeight: 10,
+          itemGap: 10,
+          data: data.slice(0, 5),
+          formatter: (name: string) => {
+            const item = data.find(d => d.name === name);
+            if (item) {
+              const percent = ((item.value / total) * 100).toFixed(1);
+              return `${name}  ${percent}%`;
+            }
+            return name;
+          },
+          textStyle: {
+            fontSize: 12
+          }
+        },
+        {
+          type: 'scroll',
+          orient: 'vertical',
+          right: '10%',
+          top: 'middle',
+          itemWidth: 10,
+          itemHeight: 10,
+          itemGap: 10,
+          data: data.slice(5, 10),
+          formatter: (name: string) => {
+            const item = data.find(d => d.name === name);
+            if (item) {
+              const percent = ((item.value / total) * 100).toFixed(1);
+              return `${name}  ${percent}%`;
+            }
+            return name;
+          },
+          textStyle: {
+            fontSize: 12
+          }
+        }
+      ],
+      series: [
+        {
+          name: '情报类型',
+          type: 'pie',
+          radius: ['40%', '60%'],
+          center: ['20%', '50%'],
+          data: data,
+          label: {
+            show: false
+          },
+          emphasis: {
+            itemStyle: {
+              shadowBlur: 10,
+              shadowOffsetX: 0,
+              shadowColor: 'rgba(0, 0, 0, 0.5)'
+            }
+          }
+        }
+      ]
+    };
+
+    return (
+      <>
+        <div style={{ marginBottom: '8px', marginLeft: '12px' }}>
+          <span style={{ fontWeight: 500 }}>情报类型TOP10</span>
+          <span style={{ fontSize: '12px', color: '#8c8c8c', marginLeft: '4px' }}>（单位：百分比）</span>
+        </div>
+        <ReactECharts
+          option={option}
+          style={{ height: '180px', marginLeft: '-30px' }}
+          opts={{ renderer: 'svg' }}
+        />
+      </>
+    );
+  };
 
   return (
     <>
